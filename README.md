@@ -15,6 +15,7 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 - `CHANGELOG.md` — log of changes made via `/pipeme update`
 - `HANDOFF.md` — condensed onboarding brief, generated on demand
 - `CLAUDE.md` — thin session-bootstrap file, auto-read by Claude Code at session start
+- `BRAND.md` + `DESIGN_SYSTEM.md` — brand book and design tokens as code, via `/pipeme design`
 
 ## Commands
 
@@ -31,6 +32,7 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 | `/pipeme retro [N]` | Post-phase retrospective, feeds remaining roadmap and risks |
 | `/pipeme handoff` | Condense the doc suite + change log into an onboarding brief |
 | `/pipeme claude.md` | Generate `CLAUDE.md` if missing (asks before overwriting if it exists) |
+| `/pipeme design` | Design Studio pipeline — brand + UI architecture, outputs BRAND.md and DESIGN_SYSTEM.md |
 
 ## Install
 
@@ -49,4 +51,4 @@ pipeme/
 
 ## Version
 
-Current: **1.21**
+Current: **1.3**
