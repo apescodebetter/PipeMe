@@ -1,6 +1,6 @@
 ---
 name: pipeme
-version: 1.1
+version: 1.2
 description: PipeMe — a virtual software company that turns an app/SaaS idea into AI-agent-ready development documentation through the /pipeme command interface. Produces a token-efficient documentation suite from scratch or from the current project (PRD, technical spec, task-decomposed roadmap, AGENTS.md rules file, Mermaid diagrams). Triggers only on /pipeme commands or explicit mentions of PipeMe.
 ---
 
@@ -87,7 +87,7 @@ For amending existing docs when the user remembers something, wants to add/chang
    - **3 (🟡 Moderate)** — affects a feature area or a few tasks (e.g. a new settings page, a new API integration). Show what will change, then require confirmation before writing.
    - **4–5 (🔴 Major)** — changes core scope, architecture, or non-goals (e.g. "add multi-user accounts", "switch the whole auth model"). Show the full impact honestly — this is exactly where the pushback protocol applies if the change is disproportionate to the project's current stage. Require explicit confirmation; do not treat it as a formality.
 3. **Completed-work check (mandatory).** Cross-check the change against ROADMAP.md task statuses. If it invalidates or requires rework on any task already marked done, list those task IDs explicitly before applying anything — the user must see this before confirming a 🟡/🔴 change, and it's surfaced even for a 🟢 change if it applies.
-4. **State which files will be touched** (PRD/TECH_SPEC/ROADMAP/AGENTS/DIAGRAMS/TEST_PLAN) before writing any of them.
+4. **State which files will be touched** (PRD/TECH_SPEC/ROADMAP/AGENTS/DIAGRAMS/TEST_PLAN/CLAUDE.md) before writing any of them.
 5. **Apply and log.** Write the changes, then append one entry to `CHANGELOG.md` (create it if it doesn't exist yet — see output-templates.md): date, one-line summary, impact score + band, files touched, one-line reason, and any completed tasks flagged for rework. Log entries record the decision, not the Q&A that led to it.
 6. Confirm completion with a short summary of what changed and where.
 
@@ -105,7 +105,7 @@ Expands one phase from milestone-level to sprint/task-level right before the use
 
 1. If `N` isn't given, ask which phase (list phases from ROADMAP.md).
 2. Break that phase's existing tasks into smaller, independently verifiable sub-tasks with their own `Done when:` criteria and 🤖/👤/🤝 ownership tags, same rules as Step 3's feasibility pass.
-3. Update ROADMAP.md **in place** for that phase only — other phases untouched. Log the expansion in CHANGELOG.md as a 🟢 Minor entry (structure detail, not scope change) unless the deep-dive surfaces a scope gap, in which case route that specific gap through Update Mode's impact scoring.
+3. Update ROADMAP.md **in place** for that phase only — other phases untouched. Update `CLAUDE.md`'s "Current Phase" line if this phase is now the active one. Log the expansion in CHANGELOG.md as a 🟢 Minor entry (structure detail, not scope change) unless the deep-dive surfaces a scope gap, in which case route that specific gap through Update Mode's impact scoring.
 
 ### Retro Mode (`/pipeme retro [N]`)
 
@@ -113,7 +113,7 @@ Short retrospective after a phase ships — keeps the roadmap grounded in realit
 
 1. If `N` isn't given, ask which completed phase.
 2. Ask a short batch (3–5 questions): what took longer than expected and why, what got cut or descoped, what was learned that changes how remaining phases should go, any new risks discovered.
-3. Feed answers into: the Risks table (add/update entries), remaining phases' task estimates or scope if the retro reveals they need adjusting (route scope changes through Update Mode's impact scoring), and CHANGELOG.md (one entry, decision-only, noting what changed as a result).
+3. Feed answers into: the Risks table (add/update entries), remaining phases' task estimates or scope if the retro reveals they need adjusting (route scope changes through Update Mode's impact scoring), and CHANGELOG.md (one entry, decision-only, noting what changed as a result). If the retro'd phase is complete and a new phase is now active, update `CLAUDE.md`'s "Current Phase" line.
 
 ### Handoff Mode (`/pipeme handoff`)
 
@@ -150,6 +150,8 @@ Read `references/output-templates.md` for the exact structure of each file. Crea
 
 **Feasibility pass (mandatory, Head of Engineering):** before finalizing ROADMAP.md, review every task and tag ownership: 🤖 agent-executable, 👤 human-only, 🤝 hybrid. Human-only triggers: external accounts/API keys/credentials, purchases (domains, subscriptions), human-reviewed submissions (Chrome Web Store, App Store, OAuth verification), legal signatures, CAPTCHAs/2FA, testing against live third-party services, production secrets. Compile all 👤/🤝 items into the Human Action Queue with external wait times flagged — so the human starts slow external processes (store review, OAuth verification) in parallel instead of discovering them as blockers mid-build.
 
+**`CLAUDE.md` generation:** always generate `CLAUDE.md` alongside the other outputs (both modes) — it's a thin bootstrap file, not a content duplicate; see output-templates.md. Set "Current Phase" to Phase 1 (or Phase 0 if generated via Analyze Mode).
+
 ### Output Files
 
 | File | Contents | Quick | Full |
@@ -162,6 +164,7 @@ Read `references/output-templates.md` for the exact structure of each file. Crea
 | `TEST_PLAN.md` | Testing strategy, critical test cases, QA gates per phase | — | ✅ |
 | `CHANGELOG.md` | Log of `/pipeme update` and `/pipeme phase`/`retro` changes: date, summary, impact score, files touched, reason | created on first update | created on first update |
 | `HANDOFF.md` | Condensed onboarding brief — generated only by `/pipeme handoff` | on demand | on demand |
+| `CLAUDE.md` | Thin session-bootstrap file for Claude Code — read order + current phase pointer, no duplicated content | ✅ | ✅ |
 
 ### Step 4 — Handoff
 

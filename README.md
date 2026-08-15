@@ -14,6 +14,7 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 - `TEST_PLAN.md` — testing strategy and QA gates (Full Mode)
 - `CHANGELOG.md` — log of changes made via `/pipeme update`
 - `HANDOFF.md` — condensed onboarding brief, generated on demand
+- `CLAUDE.md` — thin session-bootstrap file, auto-read by Claude Code at session start
 
 ## Commands
 
@@ -47,4 +48,4 @@ pipeme/
 
 ## Version
 
-Current: **1.1**
+Current: **1.2**
