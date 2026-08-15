@@ -12,6 +12,8 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 - `AGENTS.md` — rules file for AI coding agents (conventions, hard constraints, escalation rules)
 - `DIAGRAMS.md` — Mermaid diagrams (user flow, architecture, data model)
 - `TEST_PLAN.md` — testing strategy and QA gates (Full Mode)
+- `CHANGELOG.md` — log of changes made via `/pipeme update`
+- `HANDOFF.md` — condensed onboarding brief, generated on demand
 
 ## Commands
 
@@ -22,6 +24,11 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 | `/pipeme quick` | Fresh Quick Mode interview |
 | `/pipeme full` | Fresh Full Mode interview |
 | `/pipeme this` | Analyze current project/conversation, then interview the gaps |
+| `/pipeme update` | Amend existing docs based on new input mid-project, impact-scored 1–5, logged to CHANGELOG.md |
+| `/pipeme review` | Audit existing docs/code for drift — no regeneration |
+| `/pipeme phase [N]` | Expand one roadmap phase into sprint/task-level detail |
+| `/pipeme retro [N]` | Post-phase retrospective, feeds remaining roadmap and risks |
+| `/pipeme handoff` | Condense the doc suite + change log into an onboarding brief |
 
 ## Install
 
@@ -40,4 +47,4 @@ pipeme/
 
 ## Version
 
-Current: **1.0**
+Current: **1.1**
