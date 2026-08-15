@@ -30,6 +30,7 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 | `/pipeme phase [N]` | Expand one roadmap phase into sprint/task-level detail |
 | `/pipeme retro [N]` | Post-phase retrospective, feeds remaining roadmap and risks |
 | `/pipeme handoff` | Condense the doc suite + change log into an onboarding brief |
+| `/pipeme claude.md` | Generate `CLAUDE.md` if missing (asks before overwriting if it exists) |
 
 ## Install
 
@@ -48,4 +49,4 @@ pipeme/
 
 ## Version
 
-Current: **1.2**
+Current: **1.21**
