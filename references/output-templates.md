@@ -123,53 +123,55 @@ Task sizing rule: each task completable by one AI agent session (~a few hours of
 
 ## AGENTS.md
 
+`AGENTS.md` is the **rationale appendix and cross-tool map** — not a second copy of the rules. `CLAUDE.md` and the nested directory files hold the rules, because they load automatically and cheaply. Duplicating them here guarantees drift: two copies of a convention diverge the first time one is edited.
+
+This file carries what does *not* belong in an always-loaded file: the reasoning behind constraints that agents are tempted to weaken, and a map for agents that don't auto-load `CLAUDE.md`.
+
 ```markdown
-# {Product Name} — AI Agent Rules
-> Give this file to any AI coding agent working on the project.
+# AGENTS.md — {Product Name}
 
-## Project Summary
-- {2–3 bullets: what, stack, current phase}
+**This file is the rationale appendix, not the rule list.** The rules live where they load cheapest:
 
-## Conventions
-- Language/framework versions: {pinned}
-- Code style: {linter/formatter + key rules}
-- File/folder structure: {tree, top 2 levels}
-- Naming: {patterns}
-- Commits: {format, e.g. conventional commits}
+| What | Where | Loads |
+|---|---|---|
+| Hard constraints, commands, definition of done, git | `/CLAUDE.md` (repo root) | every session |
+| {Surface} conventions | `/{dir}/CLAUDE.md` | when working in `{dir}/` |
+| {Surface} conventions | `/{dir}/CLAUDE.md` | when working in `{dir}/` |
 
-## Commands
-| Action | Command |
-| dev | |
-| test | |
-| lint | |
-| build | |
+Every rule lives in exactly one place. If you're an agent that doesn't auto-load `CLAUDE.md`, read the root file plus the directory file for wherever you're working — that is the complete rule set.
 
-## Hard Constraints — irreversible or dangerous actions (never do these)
-- NEVER commit secrets, API keys, or credentials to the repo
-- NEVER delete or overwrite user data, drop tables, or run destructive migrations without an explicit human-confirmed backup
-- NEVER force-push to main or rewrite shared git history
-- NEVER disable auth checks, input validation, or rate limiting "temporarily"
-- NEVER push directly to production without passing the Definition of Done
-- {add product-specific irreversibles, e.g. "never trigger real payments in dev"}
+This file exists for the handful of constraints whose *reasoning* matters when you're tempted to change them. Read the relevant entry before weakening a rule, never as routine bootstrap.
 
-## Standards — industry-normal practice (follow by default; deviations allowed only if noted in the task and recorded in TECH_SPEC.md)
-- Write tests for new endpoints/logic; run lint + tests before marking done
-- New dependencies: prefer established libraries; record additions in TECH_SPEC.md §Stack
-- DB schema changes only via migrations
-- Follow the conventions above (style, naming, commits)
+---
 
-## Definition of Done
-- {checklist applied to every task}
-- Update the task's Status to `done` in ROADMAP.md — write it to the file, not just note it in the session. A task isn't done until the file says so.
+## Why {constraint} is {stricter/broader} than it looks
 
-## Capability Limits & Escalation
-- Tasks tagged 👤 or 🤝 in ROADMAP.md need human action — do the 🤖-preparable parts, then STOP and hand off.
-- If blocked by something you cannot do (missing credential/API key, external account, CAPTCHA/2FA, human-reviewed submission, live third-party testing): STOP. Report: what's blocked, why, exactly what the human must do. NEVER mock, stub, or simulate the blocked capability as if it works — a mock is allowed only if explicitly labeled `MOCK:` in code AND reported.
-- If a task turns out impossible or wrongly scoped, say so and propose a re-scope — never silently deliver a lookalike.
+{The reasoning. Include the asymmetry that justifies it — what a false
+positive costs vs. what a false negative costs. Agents narrow over-broad
+rules unless told why the breadth is deliberate.}
 
-## Current Focus
-- Phase {n}: see ROADMAP.md — work top-down, respect `Depends on`.
+## Why {architectural choice} is the way it is
+
+{Reasoning for a decision that looks wrong or inconsistent without context —
+the deliberate exception to a stated convention, and what breaks without it.}
+
+## Why {doc/file} is frozen / absent / not to be extended
+
+{Reasoning for negative space: things deliberately missing or off-limits.
+Absences get "helpfully" filled in unless the absence is explained.}
+
+## Capability limits & escalation
+
+Roadmap tasks carry ownership tags: 🤖 agent-executable, 👤 human-only, 🤝 hybrid. Human-only triggers are external accounts, API keys, purchases, human-reviewed submissions, legal signatures, CAPTCHAs/2FA, live third-party testing, and production secrets.
+
+On a 👤 or 🤝 task: do the 🤖-executable part, then **stop and report** — what's blocked, why, and exactly what the human must do. Never mock, stub, or simulate a blocked capability and report it done; a mock is allowed only if labeled `MOCK:` in code *and* reported.
+
+If a task turns out impossible or wrongly scoped, say so and propose a re-scope — never silently deliver a lookalike.
 ```
+
+Write a `## Why …` section only where the reasoning genuinely changes behavior. Three to six is typical; a file with a section per constraint has become the rule list again.
+
+Universal hard constraints (never commit secrets, never force-push shared history, never disable auth "temporarily", never run destructive migrations without a confirmed backup, never push to production without passing the Definition of Done) belong in the root `CLAUDE.md` constraint list alongside the product-specific ones — they are safety-critical and must load every session.
 
 ---
 
@@ -226,20 +228,13 @@ Keep each diagram under ~25 nodes. Split rather than cram.
 
 ---
 
-## CHANGELOG.md
+## No changelog
 
-```markdown
-# {Product Name} — Change Log
-> Created by /pipeme update. One entry per change.
+PipeMe does not generate `CHANGELOG.md`. Git history already records *what* changed and when, at higher fidelity and zero context cost. A prose changelog duplicates it, grows without bound, and — measured on real projects — is written far more often than it is read.
 
-## {date} — {one-line summary}
-- Impact: {1-5} ({🟢 Minor | 🟡 Moderate | 🔴 Major})
-- Files touched: {list}
-- Reason: {one line — why the user wanted this}
-- Rework flagged: {task IDs already completed that this invalidates, or "none"}
-```
+What git cannot hold is **why a rule exists**, which is what stops a future agent from "helpfully" undoing it. That belongs in `AGENTS.md` as a `## Why …` section (see its template). Update and Retro modes route reasoning there; everything else is left to git.
 
-Newest entries at the top. Decision-only — no Q&A transcript.
+If a project already has a `CHANGELOG.md` from an older PipeMe version, don't delete it unasked — mention that it's no longer maintained and offer to remove it, noting git retains the content either way.
 
 ---
 
@@ -265,10 +260,10 @@ Current phase: {N} — {name}
 {From AGENTS.md — the never-do list}
 
 ## Recent Changes
-{Condensed timeline of 🟡/🔴 CHANGELOG.md entries only}
+{Condensed timeline from `git log --oneline -20` — notable changes only, not every commit}
 
 ---
-Full docs: PRD.md, TECH_SPEC.md, ROADMAP.md, AGENTS.md, DIAGRAMS.md, TEST_PLAN.md, CHANGELOG.md, CLAUDE.md, BRAND.md, DESIGN_SYSTEM.md (if generated)
+Full docs: CLAUDE.md (+ nested {dir}/CLAUDE.md), PRD.md, TECH_SPEC.md, ROADMAP.md, AGENTS.md, DIAGRAMS.md, TEST_PLAN.md
 ```
 
 Keep to roughly one screen. This is a compression, not a re-export.
@@ -277,139 +272,115 @@ Keep to roughly one screen. This is a compression, not a re-export.
 
 ## CLAUDE.md
 
+**This file is auto-loaded into every single conversation turn.** Its size is a permanent tax on the project. Everything in it must be either (a) safety-critical, or (b) needed in the majority of sessions. Everything else is a conditional pointer with its cost labeled.
+
+**Never write a "read these files at session start" list.** That is the single most expensive mistake in this template — it converts every referenced file's size into a per-session cost. Write conditional triggers instead: *"When doing X, read Y (~N tokens)."*
+
+Target: **600–1,000 tokens.** Measure before delivering (see Token budgeting below).
+
 ```markdown
-# {Product Name} — Start Here
-> Auto-read by Claude Code at session start. Generated by PipeMe.
+# CLAUDE.md — {Product Name}
 
-## Bootstrap sequence (do this first, every session)
-1. Read `AGENTS.md` in full — conventions, commands, and hard constraints are non-negotiable.
-2. Read `ROADMAP.md` — find the current phase (see below) and the first task not yet marked done, respecting `Depends on`.
-3. Read `PRD.md` only if you need product context beyond the task description.
-4. Check `CHANGELOG.md` top entry — if it's newer than your last session, a decision changed; read it before continuing old work.
+{One-line product description: what it is, who for, key compliance/domain context.}
 
-## Current Phase
-Phase {N} — {name}. See `ROADMAP.md` for full task list and acceptance criteria.
+**Current phase: {N} — {name}.** {One line: what's done, what's blocked.}
 
-## Before you start a task
-- Confirm the task's `Depends on` tasks are marked done.
-- Check the task's Owner tag (🤖/👤/🤝) in ROADMAP.md. If it's 👤 or partly 👤, do only the 🤖-executable part, then STOP per AGENTS.md's Capability Limits & Escalation section.
+## Golden constraints (never violate)
 
-## When you finish a task
-- Verify against the task's `Done when:` criteria before marking it done.
-- Update the task's Status to `done` in `ROADMAP.md` — in the file, immediately, not at session end.
-- If anything you learned should change a future task, a doc, or an assumption — don't edit silently. Flag it in your session output; scope changes go through `/pipeme update`, not ad-hoc edits.
+{The full hard-constraint list, one terse line each. These are safety-critical —
+they load every session by design. Compress the rationale out, not the rule.
+Point to AGENTS.md for the two or three whose reasoning matters when tempted.}
 
-## Memory vs. the file
-- Session memory is fine as a working reference while you're in flow.
-- At session start and at every phase transition, consult `ROADMAP.md` for what was done and what's up next — memory supplements the file, never replaces it.
-- Before starting the first task of a new phase, confirm every task in the previous phase shows Status: `done` in the file.
+Extended rationale for constraints {N, N}: `docs/AGENTS.md`.
 
-## Re-orientation (after context compaction, session reset, or whenever memory feels uncertain)
-- Re-run the bootstrap sequence above.
-- Reconcile: cross-check `ROADMAP.md` Status values against the actual codebase for the current phase.
-- On mismatch, neither memory nor the file wins by default — the code checked against each task's `Done when:` criteria decides. Correct the file to match reality before resuming work.
+## Commands
 
-## Don't
-- Don't skip to a later task because it "looks easier" — dependencies exist for a reason.
-- Don't invent scope not in PRD.md/ROADMAP.md — flag the gap instead.
-- Don't mock a blocked 👤 capability and report it as done (see AGENTS.md).
+```
+{dev / build / lint / test / syntax-check — the ones run most often}
 ```
 
-Thin by design — sequencing only, never duplicates AGENTS.md/ROADMAP.md content. The "Current Phase" line is updated whenever `/pipeme phase` or `/pipeme retro` advances the project.
+{One line on any non-obvious local setup, e.g. required .env file, manual load steps.}
+
+{If no test suite exists, say so explicitly here — agents assume one does.}
+
+## Definition of done
+
+{Single dense line, criteria separated by · — not a bulleted list.}
+
+## Working rules
+
+- Update task status in `ROADMAP.md` **in the file, immediately** — not at session end.
+- Don't skip ahead to an easier task; `Depends on` exists for a reason.
+- Don't invent scope outside PRD/ROADMAP — flag the gap instead.
+- Scope changes go through `/pipeme update`, not ad-hoc doc edits.
+- On a 👤/🤝 task, do the 🤖 part then stop. Never mock a blocked capability and report it done.
+- After context compaction: re-read this file, then reconcile `ROADMAP.md` against actual code. Code checked against `Done when:` decides.
+
+## Git
+
+{Branch policy · commit/push policy · commit granularity. Two lines max.}
+
+## Load only what the task needs
+
+Directory rules load automatically when you open files there: {list nested CLAUDE.md paths}. Everything below is a deliberate read — check the cost first.
+
+| Read when | File | ~Tokens |
+|---|---|---|
+| You need task detail / acceptance criteria | `docs/ROADMAP.md` | {N} |
+| Scope or non-goals are in question | `docs/PRD.md` | {N} |
+| Writing backend/architecture code | `docs/TECH_SPEC.md` | {N} |
+| You need a constraint's full rationale | `docs/AGENTS.md` | {N} |
+| Writing tests or QA gates | `docs/TEST_PLAN.md` | {N} |
+| You need a diagram | `docs/DIAGRAMS.md` | {N} |
+
+There is no changelog. `git log` is the record of what changed; `docs/AGENTS.md` holds the *why* behind decisions that still constrain the code.
+
+{Any conditional trigger with real consequences, e.g. legal/compliance documents
+that must be read before touching specific features. Name the actions, state the
+consequence of skipping.}
+
+## Maintenance
+
+Maintained by PipeMe. `/pipeme phase` and `/pipeme retro` update the Current Phase line; `/pipeme claude.md` regenerates. **This file's structure is a token budget — regeneration must preserve the always-on/on-demand split, not flatten it back into a session-start reading list.**
+```
+
+### Nested `CLAUDE.md` files (generate one per major surface)
+
+Claude Code loads a directory's `CLAUDE.md` **only when it reads files in that directory**. This is the primary lever for keeping the root file small: per-surface conventions cost nothing until they're relevant.
+
+Generate one for each top-level code surface (`frontend/`, `backend/`, `extension/`, `mobile/`, `infra/`, …), 200–500 tokens each:
+
+```markdown
+# {dir}/ — {stack summary}
+
+Loaded automatically when working in this directory. Golden constraints live in the root `CLAUDE.md`{, note which ones bind hardest here}.
+
+## Conventions
+{Stack-specific patterns, file layout, framework choices, naming.}
+
+## Rules with teeth
+{Conventions where violating has a real consequence. State the consequence —
+"X already drifted once and silently under-reported" beats "keep X in sync".
+These are the rules agents actually follow.}
+
+## {Domain-specific section as needed}
+```
+
+**Every rule lives in exactly one file.** A convention in both `AGENTS.md` and a nested file will drift. When a rule moves into a nested file, replace it in `AGENTS.md` with a pointer, never a copy.
+
+### Token budgeting (mandatory before delivering any of these files)
+
+Measure — don't estimate by eye:
+
+```bash
+for f in CLAUDE.md */CLAUDE.md docs/*.md; do
+  printf "%-28s ~%s tokens\n" "$f" "$(( $(wc -w < "$f") * 135 / 100 ))"
+done
+```
+
+Then state in the handoff: the always-on cost (root + typical nested file) and the worst case if every conditional doc were read. Fill the real numbers into the routing table — a cost column with placeholders is worse than no column, because it trains agents to ignore it.
+
+If the root file exceeds ~1,000 tokens, move per-surface content into nested files. If it exceeds 1,000 with nothing left to move, the constraint list itself is too verbose — compress rationale into `AGENTS.md` and keep only the rule.
 
 ---
-
-## BRAND.md (Full design only)
-
-```markdown
-# {Product Name} — Brand Book
-> Version 1.0 · {date} · Generated by /pipeme design
-
-## Personality
-- Is: {3–5 adjectives}
-- Never: {2–3 counterweights — what it must not feel like}
-
-## Voice & Tone
-| Context | Tone | Example phrase |
-| UI copy | | |
-| Errors | | |
-| Marketing | | |
-
-## Color (semantic)
-| Token | Role | Value |
-| primary | | |
-| danger / success / warning | | |
-| surface / text hierarchy | | |
-Usage rules: {1–3 bullets, e.g. "danger only for destructive actions"}
-
-## Typography
-| Level | Font | Size/weight | Usage |
-
-## Logo & Marks
-- Usage rules: {clear space, min size, backgrounds}
-- Don'ts: {stretching, recoloring, effects...}
-- ⚠️ Asset production is a 👤 task — see Human Action Queue
-
-## Imagery & Iconography
-- Style direction: {bullets}
-- Icon style: {outline/filled, weight, corner style}
-
-## Don'ts (brand-wide)
-- {explicit exclusions}
-```
-
----
-
-## DESIGN_SYSTEM.md
-
-```markdown
-# {Product Name} — Design System
-> Version 1.0 · {date} · Generated by /pipeme design ({Quick|Full})
-
-## Tokens (source of truth)
-​```css
-:root {
-  /* color */
-  --color-primary: ...;
-  --color-surface: ...;
-  /* spacing scale */
-  --space-1: ...; --space-2: ...;
-  /* type scale */
-  --text-sm: ...; --text-base: ...;
-  /* radii, shadows */
-}
-[data-theme="dark"] { ... }
-​```
-
-## Tailwind mapping
-​```js
-// tailwind.config — consumes the CSS variables above
-theme: { extend: { colors: { primary: "var(--color-primary)", ... } } }
-​```
-Rule: components reference tokens only — never raw hex/px values.
-
-## Components (Full design)
-| Component | Variants | States |
-| Button | primary/secondary/ghost | default/hover/active/disabled/loading |
-| Input | | default/focus/error/disabled |
-...
-
-## Layout
-- Grid: {columns, gutter} · Breakpoints: {list} · Density: {dashboard | focused}
-
-## Dark mode
-- Strategy: {token swap via data-theme} · Exceptions: {list}
-
-## Accessibility baseline
-- Contrast ≥ WCAG AA, visible focus states, touch targets ≥ 44px, {additions}
-
-## Screen Map (Full design)
-​```mermaid
-flowchart TD
-  {screens and navigation}
-​```
-```
-
-Quick design generates: Tokens + Tailwind mapping + Layout basics + Accessibility baseline only — minimal and explicitly easy to extend or swap later.
-
 
