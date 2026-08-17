@@ -37,6 +37,7 @@ Docs fall into two cost classes. `CLAUDE.md` and its nested files are **always l
 | `/pipeme retro [N]` | Post-phase retrospective, feeds remaining roadmap and risks |
 | `/pipeme handoff` | Condense the doc suite into an onboarding brief |
 | `/pipeme claude.md` | Generate or rebuild `CLAUDE.md` + nested files (asks before overwriting; preserves hand-tuned structure) |
+| `/pipeme next` | Post-completion planning — close the current cycle, interview for the next one, update all docs in place |
 
 ## Install
 
@@ -55,7 +56,8 @@ pipeme/
 
 ## Version
 
-Current: **1.5**
+Current: **1.6**
 
+**1.6** — Added `/pipeme next`: post-completion planning cycle. When all phases are done, runs a new interview that builds on existing docs — archives completed phases, extends PRD/TECH_SPEC/ROADMAP in place, never duplicates or versions files.
 **1.5** — Removed `/pipeme design` (BRAND.md / DESIGN_SYSTEM.md no longer generated) and changelog generation; decision rationale now routes to `AGENTS.md` as `## Why …` sections.
 **1.4** — Context budget as a design constraint: layered `CLAUDE.md` (root + per-directory), cost-labeled routing tables replacing session-start reading lists, `AGENTS.md` reframed as a rationale appendix, mandatory token measurement before handoff.

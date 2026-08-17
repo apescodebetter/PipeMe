@@ -119,6 +119,49 @@ All 👤 and 🤝 tasks across phases, listed up front so the human can start th
 
 Task sizing rule: each task completable by one AI agent session (~a few hours of human-equivalent work). If bigger — split.
 
+### Cycle archive (created by `/pipeme next`)
+
+When `/pipeme next` starts a new cycle, the current `ROADMAP.md` is moved to `ROADMAP_CYCLE_{N}.md` (first cycle = 1) and a fresh `ROADMAP.md` is generated for the new cycle. The archive is a human-reference file — it is NOT added to `CLAUDE.md`'s routing table because agents don't need it.
+
+The archive file is the old `ROADMAP.md` as-is, with a header added:
+
+```markdown
+# {Product Name} — Roadmap (Cycle {N}, archived)
+> Archived by /pipeme next · {date}
+> Active roadmap: ROADMAP.md
+
+{original ROADMAP.md content, unchanged}
+```
+
+The new `ROADMAP.md` follows the standard template. The Risks table carries forward from the previous cycle (risks are cumulative). New phases continue numbering from where the old cycle left off.
+
+### PRD refresh rules (applied by `/pipeme next`)
+
+When refreshing `PRD.md` for a new cycle:
+- Shipped Must-have features → condense to a one-line "Existing capabilities" summary section at the top (the detail is in the code now, not the spec)
+- Should/Could items promoted to Must → move them, mark `(was {previous band} — promoted in cycle {N})`
+- Won't items that are now in scope → move them, mark `(was Won't — promoted in cycle {N})`
+- Won't items that are still Won't → keep as-is
+- Success metrics for shipped features → move to an "Achieved" subsection if met, keep in place with a note if not yet measured
+- Bump the version line: `Version {X}.0 · {date} · Cycle {N}`
+
+### TECH_SPEC refresh rules (applied by `/pipeme next`)
+
+When refreshing `TECH_SPEC.md` for a new cycle:
+- Stable, shipped components that are NOT being touched this cycle → condense to a summary table:
+
+```markdown
+## Established Components (stable — not scoped for this cycle)
+| Component | Purpose | Status |
+|---|---|---|
+| {name} | {one line} | shipped, stable |
+```
+
+- Components being extended or modified → keep full detail
+- API contracts for existing services that new features will call → keep (agents need them for integration)
+- New components/services → add with full detail per the standard template
+- Bump the version line: `Version {X}.0 · {date} · Cycle {N}`
+
 ---
 
 ## AGENTS.md
