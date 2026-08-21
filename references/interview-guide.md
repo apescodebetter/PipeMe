@@ -77,6 +77,7 @@ Deep (design-led consumer products, or accessibility-critical audiences):
 Core:
 - ★ Stack preferences or existing code? (Default meta for SaaS: Next.js/React + TypeScript, PostgreSQL, Tailwind, on Vercel/Railway.)
 - ★ What external services must it talk to (payments, email, maps, calendars, social logins)? (Defaults: Stripe, Resend, Google OAuth.)
+- ★ Buy-vs-build: for every commodity component — auth, billing, email, file storage, search — what existing managed service should we use instead of building it? (Default: managed services for ALL commodities; hand-rolling any of them requires an explicit user override recorded as such. Hand-rolled auth is the classic AI-agent time sink this question exists to prevent.)
 - ★ Does the product include AI features? If yes: what should the AI do?
 Standard:
 - What data does the app create and store, roughly? (I'll draft the data model from this.)
@@ -127,7 +128,7 @@ Deep (sensitive data, payments, or compliance-heavy products):
 
 ### Round 2 — Technical Essentials (🔧 Tech Lead + 🛡️ Security)
 - ★ Platform and stack preference? (Default: responsive web app, Next.js + TypeScript + PostgreSQL.)
-- Sign-in needed? External services (payments etc.)? (Default: Google OAuth; Stripe if paid.)
+- Sign-in needed? External services (payments etc.)? (Default: Google OAuth; Stripe if paid. Buy-vs-build default applies: managed services for all commodity components — auth, billing, email, storage — hand-rolling any requires explicit override.)
 - ★ AI features — yes/no, and what should the AI do?
 - ★ Any sensitive data stored (personal, financial, health), and are users in the EU? (🛡️ Can't be skipped even in Quick Mode — it changes the data design. Security baseline defaults still apply to AGENTS.md constraints.)
 - (If relevant) Real-time features or refresh-is-fine?

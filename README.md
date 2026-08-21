@@ -9,11 +9,10 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 - `CLAUDE.md` — always-loaded bootstrap: hard constraints, current phase, commands, and a cost-labeled routing table (~600–1,000 tokens)
 - `{dir}/CLAUDE.md` — per-surface conventions, loaded only when an agent works in that directory
 - `PRD.md` — problem, users, features, non-goals
-- `TECH_SPEC.md` — stack, architecture, data model, API contracts (Full Mode)
+- `TECH_SPEC.md` — stack, architecture, data model, API contracts, testing strategy (Full Mode)
 - `ROADMAP.md` — phased, task-decomposed, with acceptance criteria and human/agent ownership tags
 - `AGENTS.md` — rationale appendix: *why* constraints exist, plus a cross-tool map
 - `DIAGRAMS.md` — Mermaid diagrams (user flow, architecture, data model)
-- `TEST_PLAN.md` — testing strategy and QA gates (Full Mode)
 - `HANDOFF.md` — condensed onboarding brief, generated on demand
 
 ### Context budget
@@ -32,9 +31,7 @@ Docs fall into two cost classes. `CLAUDE.md` and its nested files are **always l
 | `/pipeme full` | Fresh Full Mode interview |
 | `/pipeme this` | Analyze current project/conversation, then interview the gaps |
 | `/pipeme update` | Amend existing docs based on new input mid-project, impact-scored 1–5 |
-| `/pipeme review` | Audit existing docs/code for drift — no regeneration |
 | `/pipeme phase [N]` | Expand one roadmap phase into sprint/task-level detail |
-| `/pipeme retro [N]` | Post-phase retrospective, feeds remaining roadmap and risks |
 | `/pipeme handoff` | Condense the doc suite into an onboarding brief |
 | `/pipeme claude.md` | Generate or rebuild `CLAUDE.md` + nested files (asks before overwriting; preserves hand-tuned structure) |
 | `/pipeme next` | Post-completion planning — close the current cycle, interview for the next one, update all docs in place |
@@ -56,8 +53,8 @@ pipeme/
 
 ## Version
 
-Current: **1.6**
+Current: **1.7**
 
-**1.6** — Added `/pipeme next`: post-completion planning cycle. When all phases are done, runs a new interview that builds on existing docs — archives completed phases, extends PRD/TECH_SPEC/ROADMAP in place, never duplicates or versions files.
+**1.7** — Consolidation + verification: removed `/pipeme review` (audits fold into `update`'s touched-doc drift check and `next`'s full-suite audit) and `/pipeme retro` (lives on as `next`'s Round 0 mini-retro); `TEST_PLAN.md` folded into `TECH_SPEC.md §Testing`; hard row format for ROADMAP tasks (completed rows never grow — knowledge routes to AGENTS.md/testing log/git); `## Why …` entries capped; every `Done when:` criterion names its verification method (`[test]`/`[live]`/`[human]`); buy-vs-build interview question with managed-service default. **1.6** — Added `/pipeme next`: post-completion planning cycle. When all phases are done, runs a new interview that builds on existing docs — archives completed phases, extends PRD/TECH_SPEC/ROADMAP in place, never duplicates or versions files.
 **1.5** — Removed `/pipeme design` (BRAND.md / DESIGN_SYSTEM.md no longer generated) and changelog generation; decision rationale now routes to `AGENTS.md` as `## Why …` sections.
 **1.4** — Context budget as a design constraint: layered `CLAUDE.md` (root + per-directory), cost-labeled routing tables replacing session-start reading lists, `AGENTS.md` reframed as a rationale appendix, mandatory token measurement before handoff.

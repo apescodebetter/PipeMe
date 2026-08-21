@@ -78,6 +78,13 @@ Quick Mode "lite" version: Problem, Target Users, Must-features, Non-goals, main
 | Feature | Model | Strategy | Fallback |
 - Prompting notes: {bullets}
 
+## Testing
+| Level | Tooling | Coverage target |
+| Unit | | |
+| Integration | | |
+| E2E | | |
+Critical paths (must never break): CP1: {flow} — covered by: {level}. QA gate per phase: {one line each}. Per-task verification lives in ROADMAP.md's `Done when:` methods.
+
 ## Security & Compliance
 - {auth flow, data protection, GDPR notes}
 
@@ -99,10 +106,14 @@ Quick Mode "lite" version: Problem, Target Users, Must-features, Non-goals, main
 ## Phase 1 — {name}
 Goal: {one line}
 | ID | Task | Owner | Status | Depends on | Done when |
-| 1.1 | {small, independently verifiable task} | 🤖 | todo | — | - {criterion} - {criterion} |
-| 1.2 | | 🤝 | todo | 1.1 | |
+| 1.1 | {small, independently verifiable task} | 🤖 | todo | — | - {criterion} `[test]` - {criterion} `[live]` |
+| 1.2 | | 🤝 | todo | 1.1 | - {criterion} `[human]` |
 
 Status values: `todo` / `in-progress` / `done`. Updated in this file when a task completes and at every phase transition — the file is ground truth, not session memory.
+
+Every `Done when:` criterion carries its verification method, assigned at planning time: `[test]` (automated), `[live]` (verified against the real page/service), or `[human]` (user confirms). A criterion nobody can name a verification for is not a criterion.
+
+**Hard row format — a task row never grows.** A completed row is: original task text + Status `done` + date + at most ONE optional `Note:` line (a current-state pointer, e.g. `Note: lives in lib/entitlements.ts`). Banned inside any row: build narratives, verification evidence, file inventories, decision rationale, ⚠️ warnings. Those have homes — *why* → `AGENTS.md ## Why …`, evidence → the project's testing log, everything else → the git commit. Measured on real projects: without this rule, completed rows grow from 2 lines to 10+ and the roadmap becomes the most expensive file in the suite.
 
 Owner legend: 🤖 agent-executable · 👤 human-only (accounts, credentials, purchases, legal, human-reviewed submissions) · 🤝 hybrid (agent prepares everything, human performs the final action — e.g. agent drafts store listing, human submits)
 
@@ -187,6 +198,8 @@ This file exists for the handful of constraints whose *reasoning* matters when y
 
 ---
 
+**Entry cap (hard):** every `## Why …` entry is a bold one-line rule + at most 3 lines of rationale + one pointer (code comment, log file, or commit hash) for the full story. War stories, debugging chronologies, and multi-paragraph forensics go in the pointed-to place, never here — an oversized rationale file stops being read, which defeats its purpose. `/pipeme update` and `/pipeme next` flag entries past the cap.
+
 ## Why {constraint} is {stricter/broader} than it looks
 
 {The reasoning. Include the asymmetry that justifies it — what a false
@@ -248,34 +261,11 @@ Keep each diagram under ~25 nodes. Split rather than cram.
 
 ---
 
-## TEST_PLAN.md (Full Mode only)
-
-```markdown
-# {Product Name} — Test Plan
-
-## Strategy
-| Level | Tooling | Coverage target |
-| Unit | | |
-| Integration | | |
-| E2E | | |
-
-## Critical Paths (must never break)
-- CP1: {flow} — covered by: {test level}
-
-## QA Gates
-| Phase | Gate to pass before next phase |
-
-## Edge Cases Register
-- {bullets gathered during interview}
-```
-
----
-
 ## No changelog
 
 PipeMe does not generate `CHANGELOG.md`. Git history already records *what* changed and when, at higher fidelity and zero context cost. A prose changelog duplicates it, grows without bound, and — measured on real projects — is written far more often than it is read.
 
-What git cannot hold is **why a rule exists**, which is what stops a future agent from "helpfully" undoing it. That belongs in `AGENTS.md` as a `## Why …` section (see its template). Update and Retro modes route reasoning there; everything else is left to git.
+What git cannot hold is **why a rule exists**, which is what stops a future agent from "helpfully" undoing it. That belongs in `AGENTS.md` as a `## Why …` section (see its template). Update and Next Cycle modes route reasoning there; everything else is left to git.
 
 If a project already has a `CHANGELOG.md` from an older PipeMe version, don't delete it unasked — mention that it's no longer maintained and offer to remove it, noting git retains the content either way.
 
@@ -306,7 +296,7 @@ Current phase: {N} — {name}
 {Condensed timeline from `git log --oneline -20` — notable changes only, not every commit}
 
 ---
-Full docs: CLAUDE.md (+ nested {dir}/CLAUDE.md), PRD.md, TECH_SPEC.md, ROADMAP.md, AGENTS.md, DIAGRAMS.md, TEST_PLAN.md
+Full docs: CLAUDE.md (+ nested {dir}/CLAUDE.md), PRD.md, TECH_SPEC.md, ROADMAP.md, AGENTS.md, DIAGRAMS.md
 ```
 
 Keep to roughly one screen. This is a compression, not a re-export.
@@ -352,7 +342,8 @@ Extended rationale for constraints {N, N}: `docs/AGENTS.md`.
 
 ## Working rules
 
-- Update task status in `ROADMAP.md` **in the file, immediately** — not at session end.
+- Update task status in `ROADMAP.md` **in the file, immediately** — not at session end. **The row must not grow at completion**: status + date + optionally one `Note:` pointer line. Never write build narrative, evidence, rationale, or warnings into a task row.
+- Route execution knowledge, don't dump it: *what happened / how* → the git commit message; *why a rule exists* → `AGENTS.md ## Why …` (capped format); *testing/verification narratives* → the project's testing log file. Anything captured in git or a code comment is never restated in a doc — docs hold only what changes future behavior. When in doubt, prefer deletion over relocation.
 - Don't skip ahead to an easier task; `Depends on` exists for a reason.
 - Don't invent scope outside PRD/ROADMAP — flag the gap instead.
 - Scope changes go through `/pipeme update`, not ad-hoc doc edits.
@@ -373,7 +364,7 @@ Directory rules load automatically when you open files there: {list nested CLAUD
 | Scope or non-goals are in question | `docs/PRD.md` | {N} |
 | Writing backend/architecture code | `docs/TECH_SPEC.md` | {N} |
 | You need a constraint's full rationale | `docs/AGENTS.md` | {N} |
-| Writing tests or QA gates | `docs/TEST_PLAN.md` | {N} |
+| Writing tests or QA gates | `TECH_SPEC.md §Testing` | {N} |
 | You need a diagram | `docs/DIAGRAMS.md` | {N} |
 
 There is no changelog. `git log` is the record of what changed; `docs/AGENTS.md` holds the *why* behind decisions that still constrain the code.
@@ -384,7 +375,7 @@ consequence of skipping.}
 
 ## Maintenance
 
-Maintained by PipeMe. `/pipeme phase` and `/pipeme retro` update the Current Phase line; `/pipeme claude.md` regenerates. **This file's structure is a token budget — regeneration must preserve the always-on/on-demand split, not flatten it back into a session-start reading list.**
+Maintained by PipeMe. `/pipeme phase` and `/pipeme next` update the Current Phase line; `/pipeme claude.md` regenerates. **This file's structure is a token budget — regeneration must preserve the always-on/on-demand split, not flatten it back into a session-start reading list.**
 ```
 
 ### Nested `CLAUDE.md` files (generate one per major surface)
