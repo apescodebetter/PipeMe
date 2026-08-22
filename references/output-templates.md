@@ -402,6 +402,8 @@ consequence of skipping.}
 Maintained by PipeMe. `/pipeme phase` and `/pipeme next` update the Current Phase line; `/pipeme claude.md` regenerates. **This file's structure is a token budget — regeneration must preserve the always-on/on-demand split, not flatten it back into a session-start reading list.**
 ```
 
+**Purity note (Golden Rule 7):** this is the highest-cost file in the whole suite — every line here is paid on every turn, forever. A golden constraint is a terse, standing rule, never a dated status ("As of {date}, X is connected") and never tagged with when it was added ("⭐ Cycle 3"). If a constraint needs history to make sense, that history belongs in `AGENTS.md`, not folded into the always-loaded line.
+
 ### Nested `CLAUDE.md` files (generate one per major surface)
 
 Claude Code loads a directory's `CLAUDE.md` **only when it reads files in that directory**. This is the primary lever for keeping the root file small: per-surface conventions cost nothing until they're relevant.
@@ -418,13 +420,17 @@ Loaded automatically when working in this directory. Golden constraints live in 
 
 ## Rules with teeth
 {Conventions where violating has a real consequence. State the consequence —
-"X already drifted once and silently under-reported" beats "keep X in sync".
-These are the rules agents actually follow.}
+"a table left off this list silently breaks the GDPR export promise" beats
+"keep X in sync". Consequence framing, not incident framing (Golden Rule 7) —
+never "X already drifted once" or "X was missing until Cycle N." What the rule
+protects against, not what happened before it existed.}
 
 ## {Domain-specific section as needed}
 ```
 
-**Every rule lives in exactly one file.** A convention in both `AGENTS.md` and a nested file will drift. When a rule moves into a nested file, replace it in `AGENTS.md` with a pointer, never a copy.
+**Purity applies here too (Golden Rule 7) — `CLAUDE.md` and nested files are held to it hardest, since they're paid on every turn, not read on demand.** No dated status ("As of {date}, X is connected"), no cycle/version markers on a rule ("⭐ Cycle 3: ...", "new in Cycle N"), no incident framing ("has drifted before", "was removed in Cycle N", "replaced Cycle N's X") — state the rule and, if needed, the consequence, nothing else. 2–3 sentences, same cap as everywhere else.
+
+**Every rule lives in exactly one file — three ways this breaks, all real:** (1) a rule in both `AGENTS.md` and a nested file — replace the `AGENTS.md` copy with a pointer; (2) a **root `CLAUDE.md` constraint restated in a nested file** instead of just referenced — a nested file loads *in addition to* root, never instead of it, so restating constraint 9 or 12 in `supabase/CLAUDE.md` pays for it twice, every session that touches that directory, for zero benefit; point to it by number, don't repeat its text. (3) **the same surface-spanning rule written out in full in two different nested files** — e.g. a "new table needs a `USER_TABLES` export entry" rule relevant to both `supabase/` and `dashboard/` — pick the one file where the rule is enforced or most naturally lives, state it there, and leave a one-line pointer from the other.
 
 ### Token budgeting (mandatory before delivering any of these files)
 
