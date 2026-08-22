@@ -203,7 +203,26 @@ This file exists for the handful of constraints whose *reasoning* matters when y
 
 ---
 
-**Entry cap (hard):** every `## Why …` entry is a bold one-line rule + at most 3 lines of rationale + one pointer (code comment, log file, or commit hash) for the full story. War stories, debugging chronologies, and multi-paragraph forensics go in the pointed-to place, never here — an oversized rationale file stops being read, which defeats its purpose. `/pipeme update` and `/pipeme next` flag entries past the cap.
+**Entry cap (hard):** every `## Why …` entry is a bold one-line rule + at most 3 lines of rationale + one pointer (code comment, log file, or commit hash) for the full story. War stories, debugging chronologies, and multi-paragraph forensics go in the pointed-to place, never here — an oversized rationale file stops being read, which defeats its purpose. `/pipeme update`, `/pipeme next`, and `/pipeme clean` all flag entries past the cap.
+
+**Worked example — trim the framing, keep the reasoning:**
+
+```
+✗ Before (bug-history framing, verification detail, no cap):
+"Retry gate uses queryDeep, not querySelectorAll, and re-evaluates every
+retry, not just once at page load — found via the shadow-DOM test fixture.
+This is what silently killed a real ATS integration (zero fields by design,
+tab-routed to a second page for the real form) — a permanent bailout with
+no retry of its own, not a timing issue. Live-verified fix: see the testing
+log for the full session."
+
+✓ After (1–3 lines, fact + pointer):
+"Retry gate uses queryDeep, not querySelectorAll, and re-evaluates every
+retry, not once at load — a shadow-DOM-only form needs it, or the pipeline
+skips before scanning ever runs. Full detail: docs/TESTING_LOG.md."
+```
+
+What moved: the fixture citation and the specific integration's name (evidence — cut, git/testing-log has it), the "permanent bailout... not a timing issue" clause (narrative explaining what changed — cut), "Live-verified fix" (dated verification framing — cut). What stayed: the rule, the one sentence of *why* it matters, and the pointer. Note what this ISN'T: if the entry's whole point was explaining why the current design is deliberate (e.g. "a hardcoded list drifted before, don't reintroduce one"), that causal reasoning stays — only the incident-report framing around it goes.
 
 ## Why {constraint} is {stricter/broader} than it looks
 
