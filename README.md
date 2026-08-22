@@ -31,6 +31,7 @@ Docs fall into two cost classes. `CLAUDE.md` and its nested files are **always l
 | `/pipeme full` | Fresh Full Mode interview |
 | `/pipeme this` | Analyze current project/conversation, then interview the gaps |
 | `/pipeme update` | Amend existing docs based on new input mid-project, impact-scored 1–5 |
+| `/pipeme clean` | Sweep existing docs for content that doesn't belong (history, status updates, restated rationale) and strip it |
 | `/pipeme phase [N]` | Expand one roadmap phase into sprint/task-level detail |
 | `/pipeme handoff` | Condense the doc suite into an onboarding brief |
 | `/pipeme claude.md` | Generate or rebuild `CLAUDE.md` + nested files (asks before overwriting; preserves hand-tuned structure) |
@@ -53,8 +54,9 @@ pipeme/
 
 ## Version
 
-Current: **1.7**
+Current: **1.8**
 
+**1.8** — Document purity as a hard rule: every doc has exactly one designated purpose, and content that doesn't serve it (dated changelog-style entries, cycle/task history outside `ROADMAP.md`'s own rows, decision-reversal prose, verification evidence, restated `AGENTS.md` rationale) is banned, checked live on every generate/update, not just at cleanup time. New `/pipeme clean`: sweeps existing docs for drift against this rule, flags it grouped by file, and deletes on confirmation (no migration — git is the backup).
 **1.7** — Consolidation + verification: removed `/pipeme review` (audits fold into `update`'s touched-doc drift check and `next`'s full-suite audit) and `/pipeme retro` (lives on as `next`'s Round 0 mini-retro); `TEST_PLAN.md` folded into `TECH_SPEC.md §Testing`; hard row format for ROADMAP tasks (completed rows never grow — knowledge routes to AGENTS.md/testing log/git); `## Why …` entries capped; every `Done when:` criterion names its verification method (`[test]`/`[live]`/`[human]`); buy-vs-build interview question with managed-service default. **1.6** — Added `/pipeme next`: post-completion planning cycle. When all phases are done, runs a new interview that builds on existing docs — archives completed phases, extends PRD/TECH_SPEC/ROADMAP in place, never duplicates or versions files.
 **1.5** — Removed `/pipeme design` (BRAND.md / DESIGN_SYSTEM.md no longer generated) and changelog generation; decision rationale now routes to `AGENTS.md` as `## Why …` sections.
 **1.4** — Context budget as a design constraint: layered `CLAUDE.md` (root + per-directory), cost-labeled routing tables replacing session-start reading lists, `AGENTS.md` reframed as a rationale appendix, mandatory token measurement before handoff.

@@ -1,6 +1,7 @@
 # PipeMe Output Templates
 
 All documents follow these rules:
+- **Purity (Golden Rule 7, hard):** every line must serve the file's one designated purpose — check the template below before adding anything. 1–3 lines per entry, a fact, not a story. Never write: dated changelog-style status (`✅ Fixed {date}`, "was: X"), cycle/task/phase history outside `ROADMAP.md`'s own rows, decision-reversal or "used to be X" prose, verification/evidence detail (test counts, load-test results), or rationale that belongs in `AGENTS.md`'s `## Why …` — point to it, never restate it. `/pipeme clean` sweeps existing docs for violations of this rule.
 - Bullets and tables, minimal prose. No adjectives that don't change behavior.
 - Every decision: `Decision: X. Reason: Y (one line).` Mark user-unspecified choices `(default)`.
 - Every task: acceptance criteria as `Done when:` list.
@@ -43,6 +44,8 @@ Decision: {model}. Reason: {one line}.
 ```
 
 Quick Mode "lite" version: Problem, Target Users, Must-features, Non-goals, main Journey only.
+
+**Purity note:** current scope and decisions only — what's in, what's out, why. No shipped-feature retrospectives, no cycle/task history (that's `ROADMAP.md`'s job), no rationale essays (point to `AGENTS.md`).
 
 ---
 
@@ -91,6 +94,8 @@ Critical paths (must never break): CP1: {flow} — covered by: {level}. QA gate 
 ## Environments
 | Env | Purpose | URL/notes |
 ```
+
+**Purity note:** current architecture facts only — what a component is and where, not how it got there. No build narrative, no dated status entries, no decision history, no restated `AGENTS.md` rationale. If a paragraph reads like an explanation of a bug fix or a design debate, it's misfiled — cut it or move it.
 
 ---
 
