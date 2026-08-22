@@ -39,11 +39,16 @@ awk '
   {print FILENAME":"FNR": "$0}
 ' "$DOCS/DIAGRAMS.md" 2>/dev/null
 
+echo "== Inbound references to AGENTS.md that expect rationale (it holds none) =="
+grep -rn 'AGENTS\.md' CLAUDE.md */CLAUDE.md $DOCS/*.md 2>/dev/null \
+  | grep -v "$DOCS/AGENTS.md:" | grep -v 'ROADMAP_CYCLE_' \
+  | grep -iE 'for why|reasoning|rationale|why (this|it|the)|'"'"'s .* (entry|note|trap)|see `?AGENTS'
+
 echo "== ROADMAP.md: done rows past the hard-row-format length =="
 awk -F'|' '/\|[[:space:]]*done[[:space:]]*\|/ && length($0) > 200 {print FILENAME":"FNR" ("length($0)" chars): "$0}' "$DOCS/ROADMAP.md" 2>/dev/null
 ```
 
-Every finding type this catches maps directly to a Clean Mode category: markers/dates/incident-phrasing/cycle-narrative → purity violations; any `AGENTS.md` `## Why` heading → purity violation, no exceptions; the `DIAGRAMS.md` fence check → purity violation (nothing outside a diagram's shape); the `ROADMAP.md` length check → structural shape violation. The linter catches content violations mechanically but not structural ones — a bullet-list task with clean content still fails the `document-rules.md` shape. Clean Mode's step 2 scan starts by running this — the mechanical pass surfaces candidates fast, the four-finding-type read does the judgment the script can't (structural shape violations, misfiled investigations, cross-file duplicates, and subtler purity violations that dodge the keyword list).
+Every finding type this catches maps directly to a Clean Mode category: markers/dates/incident-phrasing/cycle-narrative → purity violations; any `AGENTS.md` `## Why` heading → purity violation, no exceptions; the `DIAGRAMS.md` fence check → purity violation (nothing outside a diagram's shape); the `ROADMAP.md` length check → structural shape violation. The linter catches content violations mechanically but not structural ones — a bullet-list task with clean content still fails the `document-rules.md` shape. The inbound-reference check maps to none of the four — it is a drift finding, reported to the user the way Update Mode step 8 reports a contradiction, and it is the one check that fires precisely because a file was cleaned: emptying `AGENTS.md` leaves every `see AGENTS.md for why` in the suite aimed at nothing. Clean Mode's step 2 scan starts by running this — the mechanical pass surfaces candidates fast, the four-finding-type read does the judgment the script can't (structural shape violations, misfiled investigations, cross-file duplicates, and subtler purity violations that dodge the keyword list).
 
 ### Token budgeting
 

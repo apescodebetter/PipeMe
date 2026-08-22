@@ -189,6 +189,8 @@ Rules live where they load cheapest — this file is not the rule list:
 
 **This default holds unless the user explicitly asks for something added.** The agent doesn't reintroduce a `## Why …` section on its own judgment, ever — not to explain a non-obvious constraint, not to capture a retro lesson. If the user asks for one in a specific case, that's their call to make in that moment, not a standing exception the skill assumes.
 
+**Emptying this file is not free.** In a mature project, dozens of lines across `CLAUDE.md`, `PRD.md`, `TECH_SPEC.md`, `TEST_PLAN.md` and the nested `{dir}/CLAUDE.md` files say `see AGENTS.md` for a rule's reasoning. Cutting the rationale out without sweeping those references leaves every one of them aimed at a routing table — the reasoning is gone *and* the map to it still claims it exists, which is strictly worse than either alone. Cut and sweep are one pass, never two: each reference is repointed at the code comment that now holds the reasoning, or removed with the content it described. Verify with the inbound-reference check in `output-templates.md`.
+
 At cycle close: regenerate the table alongside `CLAUDE.md`'s, adding or removing rows as docs or surfaces change. Nothing to prune — there's nothing here that accumulates.
 
 ---
