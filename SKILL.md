@@ -121,7 +121,7 @@ A purity sweep, not a drift audit — cross-doc consistency beyond duplication i
 3. **Present findings as a flagged list, grouped by file**, each tagged with its type and the action it implies:
    - Purity violation → **cut** (quote the offending text, show the trimmed or removed result).
    - Misfiled investigation → **move to `ROADMAP.md`'s Risks table** (show the Risk / Impact / Mitigation row it becomes).
-   - Cross-file duplicate → **keep the cost-correct copy, cut the other to a pointer or remove it entirely** (name which copy survives — per Golden Rule 6, the cheaper-to-load location wins).
+   - Cross-file duplicate → **keep the copy in the file whose designated purpose it actually matches, cut the other to a pointer or remove it entirely** — routed the same way Update Mode step 5 routes new content (safety-critical/universal → `CLAUDE.md`; surface-specific → that directory's `CLAUDE.md`; reasoning behind a rule → `AGENTS.md`; scope/decisions → `PRD.md`; architecture → `TECH_SPEC.md`). Load cost is a side effect of that placement, never the reason for it.
    No file is touched at this step.
 4. **Confirm before applying**, per flag or in bulk. **Purity violations are deleted, full stop — no salvage, no "move it to AGENTS.md first."** Misfiled investigations and cross-file duplicates are the only two finding types Clean Mode relocates rather than deletes, and only because both name a concrete, already-existing destination in step 3 — this is not a general migration path, it's these two specific cases.
 5. **Apply approved actions** — cuts, Risks-table moves, and dedup — touching only the flagged spans and their named destinations. Leave everything else untouched, including formatting and surrounding structure.
