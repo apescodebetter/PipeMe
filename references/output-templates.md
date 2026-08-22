@@ -205,7 +205,7 @@ This file exists for the handful of constraints whose *reasoning* matters when y
 
 **Entry cap (hard):** every `## Why …` entry is **2–3 sentences total** — a bold one-line rule, at most one more line of rationale, and (only if needed) one pointer (code comment, log file, or commit hash) for the full story. Not 2-3 sentences of rule plus 2-3 more of rationale — 2-3 sentences, full stop. War stories, debugging chronologies, and multi-paragraph forensics go in the pointed-to place, never here — an oversized rationale file stops being read, which defeats its purpose. `/pipeme update`, `/pipeme next`, and `/pipeme clean` all flag entries past the cap.
 
-**Worked example — trim the framing, keep the reasoning:**
+**Worked example — restate as rule + consequence, don't just shorten the incident report:**
 
 ```
 ✗ Before (bug-history framing, verification detail, no cap):
@@ -222,7 +222,7 @@ retry, not once at load — a shadow-DOM-only form needs it, or the pipeline
 skips before scanning ever runs. Full detail: docs/TESTING_LOG.md."
 ```
 
-What moved: the fixture citation and the specific integration's name (evidence — cut, git/testing-log has it), the "permanent bailout... not a timing issue" clause (narrative explaining what changed — cut), "Live-verified fix" (dated verification framing — cut). What stayed: the rule, the one sentence of *why* it matters, and the pointer. Note what this ISN'T: if the entry's whole point was explaining why the current design is deliberate (e.g. "a hardcoded list drifted before, don't reintroduce one"), that causal reasoning stays — only the incident-report framing around it goes.
+What moved: the fixture citation and the specific integration's name (evidence — cut, git/testing-log has it), and — the part that isn't just a length cut — "this is what silently killed a real ATS integration... a permanent bailout, not a timing issue" got rewritten from *what happened* into *what the rule prevents* ("or the pipeline skips before scanning ever runs"). Same for "Live-verified fix": not shortened, removed — a fix being verified is a testing-log fact, not a spec fact. `AGENTS.md` is an instructions file: every surviving sentence should read as a standing rule an agent could violate today, not a report of something that was true once. If an entry only makes sense as "X broke, here's how we fixed it," that's the signal to reframe it as a consequence, not to trim it.
 
 ## Why {constraint} is {stricter/broader} than it looks
 
