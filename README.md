@@ -10,8 +10,8 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 - `{dir}/CLAUDE.md` — per-surface conventions, loaded only when an agent works in that directory
 - `PRD.md` — problem, users, features, non-goals
 - `TECH_SPEC.md` — stack, architecture, data model, API contracts, testing strategy (Full Mode)
-- `ROADMAP.md` — phased, task-decomposed, with acceptance criteria and human/agent ownership tags
-- `AGENTS.md` — rationale appendix: *why* constraints exist, plus a cross-tool map
+- `ROADMAP.md` — phased task tables with acceptance criteria and human/agent ownership tags
+- `AGENTS.md` — pure cross-reference map: what's where and when to read it
 - `DIAGRAMS.md` — Mermaid diagrams (user flow, architecture, data model)
 - `HANDOFF.md` — condensed onboarding brief, generated on demand
 
@@ -55,7 +55,9 @@ pipeme/
 
 ## Version
 
-Current: **1.10**
+Current: **1.11**
+
+**1.11** — `AGENTS.md` redefined: not a rationale file at all anymore, a pure cross-reference map. Confirmed against a real project — even after capping it at 8 entries and enforcing consequence-only framing, every entry eventually lost to further cuts; there was no floor above zero. `AGENTS.md` now holds only a routing table (extended to cover every doc in the suite, not just `CLAUDE.md` files) and the fixed Capability limits & escalation section — nothing else, no exceptions, unless the user explicitly asks for something added in a specific case. A constraint's *why* now lives in a code comment at the point of the constraint. Every mode that used to route reasoning into `AGENTS.md` (`/pipeme update`, `/pipeme next`'s retro, the archive sweep, `CLAUDE.md`'s own rationale pointer) now routes to a code comment instead. `/pipeme clean` dropped the "over-budget file" finding type — `AGENTS.md`'s rule is zero-tolerance now, not a cap to enforce judgment against.
 
 **1.10** — `document-rules.md`'s shapes were duplicated in full inside `output-templates.md`'s per-file code blocks — two sources of truth for the same structure, the exact drift risk this whole line of work exists to eliminate. `output-templates.md` shrank from ~500 lines to ~160: every per-file section is now a pointer to `document-rules.md` for shape, keeping only what's genuinely unique to it — the Mandatory Mechanical Checks, cycle-close refresh/archive procedures, and the `AGENTS.md` worked example. Every cross-reference in `SKILL.md` repointed to match.
 

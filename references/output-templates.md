@@ -26,9 +26,8 @@ grep -rniE 'was: |has drifted|shipped (a|as) real bug|fixed with|verified across
 echo "== Cycle/phase markers outside ROADMAP.md's own rows =="
 grep -rniE 'cycle [0-9]+:|new in cycle [0-9]' CLAUDE.md */CLAUDE.md $DOCS/PRD.md $DOCS/TECH_SPEC.md $DOCS/AGENTS.md $DOCS/DIAGRAMS.md $DOCS/HANDOFF.md 2>/dev/null
 
-echo "== AGENTS.md entry cap (max 8) =="
-n=$(grep -c '^## Why' "$DOCS/AGENTS.md" 2>/dev/null || echo 0)
-[ "$n" -gt 8 ] 2>/dev/null && echo "$DOCS/AGENTS.md: $n '## Why' entries — over the 8-entry cap"
+echo "== AGENTS.md: any '## Why' heading at all (none are allowed) =="
+grep -n '^## Why' "$DOCS/AGENTS.md" 2>/dev/null
 
 echo "== DIAGRAMS.md: any line outside a mermaid fence (excluding headings) =="
 awk '
@@ -44,7 +43,7 @@ echo "== ROADMAP.md: done rows past the hard-row-format length =="
 awk -F'|' '/\|[[:space:]]*done[[:space:]]*\|/ && length($0) > 200 {print FILENAME":"FNR" ("length($0)" chars): "$0}' "$DOCS/ROADMAP.md" 2>/dev/null
 ```
 
-Every finding type this catches maps directly to a Clean Mode category: markers/dates/incident-phrasing/cycle-narrative → purity violations; the `AGENTS.md` count → over-budget file; the `DIAGRAMS.md` fence check → purity violation (nothing outside a diagram's shape); the `ROADMAP.md` length check → hard-row-format violation. Clean Mode's step 2 scan starts by running this — the mechanical pass surfaces candidates fast, the four-finding-type read does the judgment the script can't.
+Every finding type this catches maps directly to a Clean Mode category: markers/dates/incident-phrasing/cycle-narrative → purity violations; any `AGENTS.md` `## Why` heading → purity violation, no exceptions; the `DIAGRAMS.md` fence check → purity violation (nothing outside a diagram's shape); the `ROADMAP.md` length check → structural shape violation. The linter catches content violations mechanically but not structural ones — a bullet-list task with clean content still fails the `document-rules.md` shape. Clean Mode's step 2 scan starts by running this — the mechanical pass surfaces candidates fast, the four-finding-type read does the judgment the script can't (structural shape violations, misfiled investigations, cross-file duplicates, and subtler purity violations that dodge the keyword list).
 
 ### Token budgeting
 
@@ -56,7 +55,7 @@ for f in CLAUDE.md */CLAUDE.md docs/*.md; do
 done
 ```
 
-State in the handoff: the always-on cost (root + typical nested file) and the worst case if every conditional doc were read. Fill real numbers into the routing table — a cost column with placeholders is worse than no column, because it trains agents to ignore it. If the root `CLAUDE.md` exceeds ~1,000 tokens, move per-surface content into nested files; if it's still over with nothing left to move, the constraint list itself is too verbose — compress rationale into `AGENTS.md` and keep only the rule.
+State in the handoff: the always-on cost (root + typical nested file) and the worst case if every conditional doc were read. Fill real numbers into the routing table — a cost column with placeholders is worse than no column, because it trains agents to ignore it. If the root `CLAUDE.md` exceeds ~1,000 tokens, move per-surface content into nested files; if it's still over with nothing left to move, the constraint list itself is too verbose — compress rationale into a code comment at the constraint and keep only the rule in `CLAUDE.md`.
 
 ---
 
@@ -108,12 +107,12 @@ Human reference only — not added to `CLAUDE.md`'s routing table. A fresh `ROAD
 
 ## AGENTS.md
 
-Shape and hard rules: `document-rules.md §AGENTS.md`.
+Shape and hard rules: `document-rules.md §AGENTS.md`. Confirmed against a real project: even an aggressively pruned, capped, rule-shaped `AGENTS.md` still lost every entry in the end — `AGENTS.md` holds no rationale at all now, not even one compressed line. What follows used to be a worked example of compressing an `AGENTS.md` entry down to a compliant `## Why …` shape. It isn't anymore, because that shape doesn't exist in this file — but the underlying transformation (incident report → standing rule) is still exactly right, just aimed at a different destination: a code comment, at the point of the constraint, in the source file itself.
 
-**Worked example — restate as rule + consequence, don't just shorten the incident report:**
+**Worked example — restate as rule + consequence, and put it where it's actually read:**
 
 ```
-✗ Before (bug-history framing, verification detail, no cap):
+✗ Before (bug-history framing, verification detail — belongs nowhere as prose):
 "Retry gate uses queryDeep, not querySelectorAll, and re-evaluates every
 retry, not just once at page load — found via the shadow-DOM test fixture.
 This is what silently killed a real ATS integration (zero fields by design,
@@ -121,13 +120,13 @@ tab-routed to a second page for the real form) — a permanent bailout with
 no retry of its own, not a timing issue. Live-verified fix: see the testing
 log for the full session."
 
-✓ After (2–3 sentences, fact + pointer):
-"Retry gate uses queryDeep, not querySelectorAll, and re-evaluates every
-retry, not once at load — a shadow-DOM-only form needs it, or the pipeline
-skips before scanning ever runs. Full detail: docs/TESTING_LOG.md."
+✓ After (a code comment directly above the retry gate in content.js):
+// queryDeep, not querySelectorAll — re-evaluated every retry, or a false
+// zero-fields reading bails out the script permanently. Full detail:
+// docs/TESTING_LOG.md.
 ```
 
-What moved: the fixture citation and the specific integration's name (evidence — cut, git/testing-log has it), and — the part that isn't just a length cut — "this is what silently killed a real ATS integration... a permanent bailout, not a timing issue" got rewritten from *what happened* into *what the rule prevents* ("or the pipeline skips before scanning ever runs"). Same for "Live-verified fix": not shortened, removed — a fix being verified is a testing-log fact, not a spec fact. `AGENTS.md` is an instructions file: every surviving sentence should read as a standing rule an agent could violate today, not a report of something that was true once. If an entry only makes sense as "X broke, here's how we fixed it," that's the signal to reframe it as a consequence, not to trim it.
+What moved: the fixture citation and the specific integration's name (evidence — cut, git/testing-log has it), and "this is what silently killed a real ATS integration... a permanent bailout, not a timing issue" got rewritten from *what happened* into *what the rule prevents*. Same for "Live-verified fix": not shortened, removed — a fix being verified is a testing-log fact, not a spec fact. What's different from earlier versions of this example: the destination itself changed. A doc requires an agent to know to go look; a comment is read by whoever's already looking at the code it explains. If an entry only makes sense as "X broke, here's how we fixed it," reframe it as a consequence *and* move it — never leave it in `AGENTS.md`, no matter how short it gets.
 
 ---
 

@@ -4,7 +4,7 @@ Not a rulebook. A shape book. For each file below: its purpose, its literal stru
 
 **The law, stated once because it's the same for every file:** if a piece of content doesn't fit one of the shapes shown for that file, it does not belong in that file — full stop, no matter how short, how true, or how useful it is. There is no "brief exception," no "just a one-line note," no fluff text between or around the shapes. A file with a defined structure has no free space in it. Content that has no shape to fit goes to whichever file it *does* fit, or it goes nowhere.
 
-This file states the shape; it doesn't check anything. What actually catches a shape violation mechanically — the `⭐`/`✅` markers, dated status, incident phrasing, the `AGENTS.md` entry count, `DIAGRAMS.md`'s "nothing outside a fence" rule — is the **purity linter** in `output-templates.md`'s Mandatory Mechanical Checks, run before any generate/update/clean pass is considered done.
+This file states the shape; it doesn't check anything. What actually catches a shape violation mechanically — the `⭐`/`✅` markers, dated status, incident phrasing, any `## Why …` heading in `AGENTS.md` at all, `DIAGRAMS.md`'s "nothing outside a fence" rule — is the **purity linter** in `output-templates.md`'s Mandatory Mechanical Checks, run before any generate/update/clean pass is considered done.
 
 ---
 
@@ -16,24 +16,26 @@ This file states the shape; it doesn't check anything. What actually catches a s
 ```markdown
 # {Product Name} — Diagrams
 
-## 1. {Diagram name}
-
 ​```mermaid
+---
+title: {Diagram name}
+---
 {flowchart | erDiagram | sequenceDiagram | stateDiagram-v2}
 {...diagram body...}
 ​```
 
-## 2. {Diagram name}
-
 ​```mermaid
+---
+title: {Diagram name}
+---
 {...}
 ​```
 ```
 
-**The law, applied:** a bare `# title` and a bare `## N. {name}` heading per diagram are the only text in this file that isn't inside a `mermaid` fence. Everything else is diagram syntax — nodes, edges, labels — or it doesn't exist here. Concretely rejected, all real examples:
+**The law, applied:** even a bare `## N. {name}` heading per diagram isn't a diagram — it's markdown, sitting outside the thing it's naming. Mermaid's own `title` frontmatter, inside the fence, does the same naming job as an actual part of the diagram. The only text in this file outside a `mermaid` fence is the one `# {Product Name} — Diagrams` line, matching every other doc's own file-identifying title — everything else is diagram syntax: nodes, edges, labels, a `title` block, or it doesn't exist here. Concretely rejected, all real examples:
 - A paragraph before the first diagram explaining when it was last regenerated. Not a diagram. Cut, or if it's genuinely load-bearing, it's a git commit message.
 - A blockquote caption after a diagram explaining a fact the diagram can't show (e.g. "autofill is free, only the AI branch is metered"). Still not a diagram — the fact belongs in `TECH_SPEC.md`, referenced from nowhere in this file.
-- A `⭐` or cycle tag inside a node label, an ER relationship label, or a section heading (`RESEND[Resend ⭐ Cycle 3<br/>...]`, `"⭐ has (Cycle 3)"`, `## 6. Sequence — buying credits ⭐ Phase 16`). A label names what the node *is*; it is never a status field.
+- A `⭐` or cycle tag inside a node label, an ER relationship label, or a heading (`RESEND[Resend ⭐ Cycle 3<br/>...]`, `"⭐ has (Cycle 3)"`, a title reading "buying credits ⭐ Phase 16"). A label or title names what the thing *is*; it is never a status field.
 - A paragraph comparing the current data model to a removed one ("structurally different from the removed Cycle 2 top-up..."). History, not a diagram — cut entirely, git has it.
 
 Keep each diagram under ~25 nodes — split into a new numbered diagram rather than cram.
@@ -46,25 +48,38 @@ Keep each diagram under ~25 nodes — split into a new numbered diagram rather t
 
 **Shape:**
 ```markdown
-# {Product Name} — Roadmap
-> Version 1.0 · {date}
+# {Product Name} — Roadmap · Cycle {N}
 
-## Phases Overview
-| Phase | Goal | Ships when |
+> {One line: archive pointers + ownership/verification legend.}
 
-## Phase 1 — {name}
+**Cycle {N} theme: {name}.** {One sentence: what this cycle does.}
+
+---
+
+## Phase {X} — {name}
+
 Goal: {one line}
+
 | ID | Task | Owner | Status | Depends on | Done when |
-| 1.1 | {task} | 🤖 | todo | — | - {criterion} `[test]` |
+|---|---|---|---|---|---|
+| {X}.1 | {task} | 🤖 | todo | — | {1-2 phrases} `[test]` |
 
-## Human Action Queue
-| Task ID | Human action | Needed before | External wait? |
+---
 
-## Risks
-| Risk | Impact | Mitigation |
+## Deferred (not scheduled this cycle)
+
+| Item | Status | Blocker |
+|---|---|---|
+| {item} | Deferred / Shelved / Dropped | {1 phrase or —} |
+
+## Human Action Queue (👤 / 🤝)
+
+| # | Action | Blocks | External wait |
+|---|---|---|---|
+| H{N} | {action} | {task ID or description} | — |
 ```
 
-**The law, applied:** a task is a table row with exactly those six fields — nothing free-floats between rows, nothing follows `Done when:` beyond its criteria. A row that's `done` shrinks to: original task text + `done` + date + **at most one** `Note:` line — never grows past that shape on completion, no matter what happened during the work. Rejected, real examples: build narrative in a Done row, verification evidence in a Done row, a decision-rationale paragraph attached to a task, ⚠️ warnings floating outside the table. All of it routes elsewhere: *why* → `AGENTS.md`, evidence → the testing log, everything else → the git commit that did the work.
+**The law, applied:** a task is a table row with exactly those six fields. The `Done when` cell is 1-2 phrases — never a paragraph, never multi-sentence, never carries context like "carried from Cycle N" or "unchanged constraint from Cycle M" or "same precondition X needed." Nothing free-floats between rows or outside a table — no bullet lists, no paragraphs under a task, no `⚠️` warnings, no narrative. A row that's `done` shrinks to: original task text + `done` + date — never grows past that. Deferred items are table rows too, not paragraph bullets — same 1-phrase compression applies. Rejected, all real: multi-line "Done when" blocks with implementation detail and constraint history, bullet-point task lists instead of table rows, build narrative in Done rows, verification evidence, parenthetical cycle/phase lineage.
 
 At cycle close: the whole file moves to `ROADMAP_CYCLE_{N}.md` (unchanged, human reference only), a fresh file starts at the next phase — the Risks table is the only thing carried forward, and it carries as rows, not prose.
 
@@ -152,36 +167,29 @@ At cycle close: stable, unchanged components condense to `| Component | Purpose 
 
 ## AGENTS.md
 
-**Purpose:** the *why* behind constraints an agent might otherwise "helpfully" undo. Not the rules — a map to them, and the reasoning the rules alone can't carry.
+**Purpose:** a pure cross-reference map — what's where, and when to read it. Nothing else. Confirmed against a real project (Trabalero, 2026-08-22): every round of cuts left the entry count lower, and the entries that survived each round still eventually lost to the next round — there turned out to be no floor above zero. A constraint's *why*, no matter how compressed, doesn't belong in a separate doc; it belongs in a code comment at the point of the constraint, where whoever's about to change that code will actually see it.
 
 **Shape:**
 ```markdown
 # AGENTS.md — {Product Name}
 
+Rules live where they load cheapest — this file is not the rule list:
+
 | What | Where | Loads |
 |---|---|---|
-| Hard constraints, commands, DoD, git | `/CLAUDE.md` | every session |
-| {Surface} conventions | `/{dir}/CLAUDE.md` | when working in `{dir}/` |
-
-## Why {constraint} is {stricter/broader} than it looks
-{Bold rule already stated above as the heading. One more line: the asymmetry
-that justifies it — what a false positive costs vs. a false negative.}
-
-## Why {architectural choice} is the way it is
-{One line: what breaks without it.}
-
-## Why {doc/file} is frozen / absent
-{One line: why the absence is deliberate.}
+| Golden constraints, commands, DoD, git | `/CLAUDE.md` | every session |
+| {Surface} conventions | `/{dir}/CLAUDE.md` | working in `{dir}/` |
+| {What this doc holds} | `docs/{Doc}.md` | {when to read it} |
 
 ## Capability limits & escalation
 {Fixed section — ownership tags, stop-and-report rule.}
 ```
 
-**The law, applied:** every `## Why …` heading IS the rule — the body under it is at most one more line of rationale plus, only if needed, one pointer. That's the whole shape; there is no wider paragraph mode for this file. **Hard cap: 8 `## Why …` sections, total.** A 9th means cutting or merging one first, always — the shape doesn't grow by adding rows the way a table can. Rejected, real, common pattern: an entry whose body is 4+ sentences of "X used to break, here's when we found out and how we patched it, verified across N executions" — none of that is "one more line of rationale plus a pointer," so it doesn't matter that every sentence in it is true; it gets rewritten down to the shape (rule stated, consequence stated, pointer if needed) or it doesn't survive.
+**The law, applied:** every row is `{what} | {where} | {when}` — a fact about location, never about reasoning. No `## Why …` heading, no rationale paragraph, no exception for "just one line" — there is no shape in this file for any of it, the same way `DIAGRAMS.md` has no shape for a caption. The table covers *every* doc in the suite, not just `CLAUDE.md` files — `PRD.md`, `TECH_SPEC.md`, `ROADMAP.md`, `DIAGRAMS.md`, and any project-specific doc each get a row, same as the `CLAUDE.md` rows above them.
 
-**Pruning test, applied before any addition and at every cycle close:** would a competent agent still plausibly undo this constraint on first read, without the explanation? Still looks like a bug (an over-broad matcher, a frozen file) → keep. Now embedded in a test or simply unquestioned across cycles → cut, the shape has no room for sentimental entries. Age alone is never the reason; being no-longer-surprising is.
+**This default holds unless the user explicitly asks for something added.** The agent doesn't reintroduce a `## Why …` section on its own judgment, ever — not to explain a non-obvious constraint, not to capture a retro lesson. If the user asks for one in a specific case, that's their call to make in that moment, not a standing exception the skill assumes.
 
-At cycle close: **prune, then accumulate** — the one file in the suite with no archive, so it's the one place a size limit has to be enforced by cutting, not by resetting.
+At cycle close: regenerate the table alongside `CLAUDE.md`'s, adding or removing rows as docs or surfaces change. Nothing to prune — there's nothing here that accumulates.
 
 ---
 
@@ -198,7 +206,7 @@ At cycle close: **prune, then accumulate** — the one file in the suite with no
 **Current phase: {N} — {name}.** {One line: what's done, what's blocked.}
 
 ## Golden constraints (never violate)
-{One terse line each. Point to AGENTS.md by number for the ones whose reasoning matters.}
+{One terse line each. Reasoning for a non-obvious one lives in a code comment at that constraint — not a separate doc, not AGENTS.md.}
 
 ## Commands
 ​```
@@ -269,7 +277,7 @@ Current phase: {N} — {name}
 {Bulleted, from TECH_SPEC — decisions only}
 
 ## Hard Constraints
-{From AGENTS.md's never-do list}
+{From CLAUDE.md's golden constraints}
 
 ## Recent Changes
 {Condensed from `git log --oneline -20`}
