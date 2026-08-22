@@ -57,7 +57,17 @@ pipeme/
 
 Current: **1.11**
 
-**1.11** — `AGENTS.md` redefined: not a rationale file at all anymore, a pure cross-reference map. Confirmed against a real project — even after capping it at 8 entries and enforcing consequence-only framing, every entry eventually lost to further cuts; there was no floor above zero. `AGENTS.md` now holds only a routing table (extended to cover every doc in the suite, not just `CLAUDE.md` files) and the fixed Capability limits & escalation section — nothing else, no exceptions, unless the user explicitly asks for something added in a specific case. A constraint's *why* now lives in a code comment at the point of the constraint. Every mode that used to route reasoning into `AGENTS.md` (`/pipeme update`, `/pipeme next`'s retro, the archive sweep, `CLAUDE.md`'s own rationale pointer) now routes to a code comment instead. `/pipeme clean` dropped the "over-budget file" finding type — `AGENTS.md`'s rule is zero-tolerance now, not a cap to enforce judgment against.
+**1.11** — Structure becomes enforceable, not just advisory.
+
+`AGENTS.md` redefined: not a rationale file at all anymore, a pure cross-reference map. Confirmed against a real project — even after capping it at 8 entries and enforcing consequence-only framing, every entry eventually lost to further cuts; there was no floor above zero. It now holds only a routing table (extended to cover every doc in the suite, not just `CLAUDE.md` files) and the fixed Capability limits & escalation section — nothing else, no exceptions, unless the user explicitly asks in a specific case. A constraint's *why* now lives in a code comment at the point of the constraint, and every mode that used to route reasoning into `AGENTS.md` (`/pipeme update`, `/pipeme next`'s retro, the archive sweep, `CLAUDE.md`'s rationale pointer) routes there instead.
+
+`ROADMAP.md` is table-only. Tasks are rows — `| ID | Task | Owner | Status | Depends on | Done when |` — with `Done when` cells of 1–2 phrases. No bullet lists, no paragraph blocks under a task, no lineage parentheticals ("carried from Cycle N", "unchanged constraint from Cycle M"), no free-floating prose between tables. Deferred items are rows too (`| Item | Status | Blocker |`), not paragraph bullets.
+
+`DIAGRAMS.md` is fences-only. Diagram names use mermaid `title:` frontmatter *inside* the fence — even a bare `##` heading is markdown sitting outside the thing it names. The only non-fence line is the file title.
+
+The entry standard tightened from 2–3 sentences to **1–2 phrases**, propagated through the live purity check that generation actually runs.
+
+`/pipeme clean` gained a fourth finding type — **structural shape violations** — distinct from purity violations: right content, wrong format. Its action is *restructure*, and "the content is accurate" is explicitly not a reason to keep the wrong shape. `/pipeme update` now writes in the shape from `document-rules.md` and verifies it after, since the linter catches content violations but not structural ones. The "over-budget file" type is gone — `AGENTS.md` is zero-tolerance now, not a cap to judge against.
 
 **1.10** — `document-rules.md`'s shapes were duplicated in full inside `output-templates.md`'s per-file code blocks — two sources of truth for the same structure, the exact drift risk this whole line of work exists to eliminate. `output-templates.md` shrank from ~500 lines to ~160: every per-file section is now a pointer to `document-rules.md` for shape, keeping only what's genuinely unique to it — the Mandatory Mechanical Checks, cycle-close refresh/archive procedures, and the `AGENTS.md` worked example. Every cross-reference in `SKILL.md` repointed to match.
 
