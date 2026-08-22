@@ -1,7 +1,7 @@
 # PipeMe Output Templates
 
 All documents follow these rules:
-- **Purity (Golden Rule 7, hard):** every line must serve the file's one designated purpose — check the template below before adding anything. 1–3 lines per entry, a fact, not a story. Never write: dated changelog-style status (`✅ Fixed {date}`, "was: X"), cycle/task/phase history outside `ROADMAP.md`'s own rows, decision-reversal or "used to be X" prose, verification/evidence detail (test counts, load-test results), or rationale that belongs in `AGENTS.md`'s `## Why …` — point to it, never restate it. `/pipeme clean` sweeps existing docs for violations of this rule.
+- **Purity (Golden Rule 7, hard):** every line must serve the file's one designated purpose — check the template below before adding anything. 2–3 sentences per entry, a fact, not a story. Never write: dated changelog-style status (`✅ Fixed {date}`, "was: X"), cycle/task/phase history outside `ROADMAP.md`'s own rows, decision-reversal or "used to be X" prose, verification/evidence detail (test counts, load-test results), or rationale that belongs in `AGENTS.md`'s `## Why …` — point to it, never restate it. `/pipeme clean` sweeps existing docs for violations of this rule.
 - Bullets and tables, minimal prose. No adjectives that don't change behavior.
 - Every decision: `Decision: X. Reason: Y (one line).` Mark user-unspecified choices `(default)`.
 - Every task: acceptance criteria as `Done when:` list.
@@ -203,7 +203,7 @@ This file exists for the handful of constraints whose *reasoning* matters when y
 
 ---
 
-**Entry cap (hard):** every `## Why …` entry is a bold one-line rule + at most 3 lines of rationale + one pointer (code comment, log file, or commit hash) for the full story. War stories, debugging chronologies, and multi-paragraph forensics go in the pointed-to place, never here — an oversized rationale file stops being read, which defeats its purpose. `/pipeme update`, `/pipeme next`, and `/pipeme clean` all flag entries past the cap.
+**Entry cap (hard):** every `## Why …` entry is **2–3 sentences total** — a bold one-line rule, at most one more line of rationale, and (only if needed) one pointer (code comment, log file, or commit hash) for the full story. Not 2-3 sentences of rule plus 2-3 more of rationale — 2-3 sentences, full stop. War stories, debugging chronologies, and multi-paragraph forensics go in the pointed-to place, never here — an oversized rationale file stops being read, which defeats its purpose. `/pipeme update`, `/pipeme next`, and `/pipeme clean` all flag entries past the cap.
 
 **Worked example — trim the framing, keep the reasoning:**
 
@@ -216,7 +216,7 @@ tab-routed to a second page for the real form) — a permanent bailout with
 no retry of its own, not a timing issue. Live-verified fix: see the testing
 log for the full session."
 
-✓ After (1–3 lines, fact + pointer):
+✓ After (2–3 sentences, fact + pointer):
 "Retry gate uses queryDeep, not querySelectorAll, and re-evaluates every
 retry, not once at load — a shadow-DOM-only form needs it, or the pipeline
 skips before scanning ever runs. Full detail: docs/TESTING_LOG.md."
