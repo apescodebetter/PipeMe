@@ -1,12 +1,6 @@
 # PipeMe Output Templates
 
-All documents follow these rules:
-- **Purity (Golden Rule 7, hard):** every line must serve the file's one designated purpose — check the template below before adding anything. 2–3 sentences per entry, a fact, not a story. Never write: dated changelog-style status (`✅ Fixed {date}`, "was: X"), cycle/task/phase history outside `ROADMAP.md`'s own rows, decision-reversal or "used to be X" prose, verification/evidence detail (test counts, load-test results), or rationale that belongs in `AGENTS.md`'s `## Why …` — point to it, never restate it. `/pipeme clean` sweeps existing docs for violations of this rule.
-- Bullets and tables, minimal prose. No adjectives that don't change behavior.
-- Every decision: `Decision: X. Reason: Y (one line).` Mark user-unspecified choices `(default)`.
-- Every task: acceptance criteria as `Done when:` list.
-- Diagrams: Mermaid only.
-- Cross-reference by file name (`see TECH_SPEC.md §Data Model`), never duplicate content between files.
+**Every document's literal shape and hard rules live in `references/document-rules.md`.** This file covers what that one doesn't: the mandatory mechanical checks, cycle-close refresh/archive procedures, and one worked example. Read `document-rules.md` first — it's the shape; this file is the mechanics.
 
 ---
 
@@ -68,134 +62,37 @@ State in the handoff: the always-on cost (root + typical nested file) and the wo
 
 ## PRD.md
 
-```markdown
-# {Product Name} — PRD
-> Version 1.0 · {date} · Mode: {Quick|Full}
+Shape and hard rules: `document-rules.md §PRD.md`.
 
-## Problem
-- {1–3 bullets}
-
-## Target Users
-| User type | Description | Primary need |
-
-## Value Proposition
-- {1 sentence}
-
-## Features (MoSCoW)
-### Must (v1)
-- F1: {name} — {one line}
-### Should (v1 if time allows)
-### Could (v2+)
-### Won't (non-goals)
-- {explicit exclusions — critical for AI agents}
-
-## User Journeys
-- J1: {step → step → step}
-
-## Success Metrics
-| Metric | Target | When |
-
-## Monetization
-Decision: {model}. Reason: {one line}.
-```
-
-Quick Mode "lite" version: Problem, Target Users, Must-features, Non-goals, main Journey only.
-
-**Purity note:** current scope and decisions only — what's in, what's out, why. No shipped-feature retrospectives, no cycle/task history (that's `ROADMAP.md`'s job), no rationale essays (point to `AGENTS.md`).
+### Refresh at cycle close (`/pipeme next`)
+- Shipped Must-have features → condense to a one-line "Existing capabilities" summary at the top
+- Should/Could items promoted to Must → mark `(was {previous band} — promoted in cycle {N})`
+- Won't items promoted into scope → mark `(was Won't — promoted in cycle {N})`; items still Won't stay as-is
+- Success metrics for shipped features → move to an "Achieved" subsection if met, keep in place with a note if not yet measured
+- Bump the version line: `Version {X}.0 · {date} · Cycle {N}`
 
 ---
 
 ## TECH_SPEC.md
 
-```markdown
-# {Product Name} — Technical Specification
-> Version 1.0 · {date}
+Shape and hard rules: `document-rules.md §TECH_SPEC.md`.
 
-## Stack
-| Layer | Choice | Reason |
-| Frontend | | |
-| Backend | | |
-| Database | | |
-| Hosting | | |
-| Auth | | |
-
-## Architecture
-- {bullets: services/components and responsibilities}
-- Diagram: see DIAGRAMS.md §Architecture
-
-## Data Model
-| Entity | Key fields | Relations |
-- Diagram: see DIAGRAMS.md §Data Model
-
-## API Contracts
-| Method | Path | Purpose | Auth | Request → Response (shape only) |
-
-## External Integrations
-| Service | Purpose | Notes |
-
-## AI Features (omit section if none)
-| Feature | Model | Strategy | Fallback |
-- Prompting notes: {bullets}
-
-## Testing
-| Level | Tooling | Coverage target |
-| Unit | | |
-| Integration | | |
-| E2E | | |
-Critical paths (must never break): CP1: {flow} — covered by: {level}. QA gate per phase: {one line each}. Per-task verification lives in ROADMAP.md's `Done when:` methods.
-
-## Security & Compliance
-- {auth flow, data protection, GDPR notes}
-
-## Environments
-| Env | Purpose | URL/notes |
-```
-
-**Purity note:** current architecture facts only — what a component is and where, not how it got there. No build narrative, no dated status entries, no decision history, no restated `AGENTS.md` rationale. If a paragraph reads like an explanation of a bug fix or a design debate, it's misfiled — cut it or move it.
+### Refresh at cycle close (`/pipeme next`)
+- Stable, unchanged components → condense to `| Component | Purpose | Status |`
+- Components being extended or modified → keep full detail
+- API contracts for existing services new features will call → keep, agents need them to integrate
+- New components/services → full detail per the standard shape
+- Bump the version line
 
 ---
 
 ## ROADMAP.md
 
-```markdown
-# {Product Name} — Roadmap
-> Version 1.0 · {date}
-
-## Phases Overview
-| Phase | Goal | Ships when |
-
-## Phase 1 — {name}
-Goal: {one line}
-| ID | Task | Owner | Status | Depends on | Done when |
-| 1.1 | {small, independently verifiable task} | 🤖 | todo | — | - {criterion} `[test]` - {criterion} `[live]` |
-| 1.2 | | 🤝 | todo | 1.1 | - {criterion} `[human]` |
-
-Status values: `todo` / `in-progress` / `done`. Updated in this file when a task completes and at every phase transition — the file is ground truth, not session memory.
-
-Every `Done when:` criterion carries its verification method, assigned at planning time: `[test]` (automated), `[live]` (verified against the real page/service), or `[human]` (user confirms). A criterion nobody can name a verification for is not a criterion.
-
-**Hard row format — a task row never grows.** A completed row is: original task text + Status `done` + date + at most ONE optional `Note:` line (a current-state pointer, e.g. `Note: lives in lib/entitlements.ts`). Banned inside any row: build narratives, verification evidence, file inventories, decision rationale, ⚠️ warnings. Those have homes — *why* → `AGENTS.md ## Why …`, evidence → the project's testing log, everything else → the git commit. Measured on real projects: without this rule, completed rows grow from 2 lines to 10+ and the roadmap becomes the most expensive file in the suite.
-
-Owner legend: 🤖 agent-executable · 👤 human-only (accounts, credentials, purchases, legal, human-reviewed submissions) · 🤝 hybrid (agent prepares everything, human performs the final action — e.g. agent drafts store listing, human submits)
-
-## Phase 2 — {name}
-...
-
-## Human Action Queue
-All 👤 and 🤝 tasks across phases, listed up front so the human can start them in parallel (many have external wait times: store reviews, OAuth verification, account approvals):
-| Task ID | Human action | Needed before | External wait? |
-
-## Risks
-| Risk | Impact | Mitigation |
-```
-
-Task sizing rule: each task completable by one AI agent session (~a few hours of human-equivalent work). If bigger — split.
+Shape and hard rules: `document-rules.md §ROADMAP.md`.
 
 ### Cycle archive (created by `/pipeme next`)
 
-When `/pipeme next` starts a new cycle, the current `ROADMAP.md` is moved to `ROADMAP_CYCLE_{N}.md` (first cycle = 1) and a fresh `ROADMAP.md` is generated for the new cycle. The archive is a human-reference file — it is NOT added to `CLAUDE.md`'s routing table because agents don't need it.
-
-The archive file is the old `ROADMAP.md` as-is, with a header added:
+The current `ROADMAP.md` moves to `ROADMAP_CYCLE_{N}.md` (first cycle = 1), unchanged, with a header added:
 
 ```markdown
 # {Product Name} — Roadmap (Cycle {N}, archived)
@@ -205,61 +102,13 @@ The archive file is the old `ROADMAP.md` as-is, with a header added:
 {original ROADMAP.md content, unchanged}
 ```
 
-The new `ROADMAP.md` follows the standard template. The Risks table carries forward from the previous cycle (risks are cumulative). New phases continue numbering from where the old cycle left off.
-
-### PRD refresh rules (applied by `/pipeme next`)
-
-When refreshing `PRD.md` for a new cycle:
-- Shipped Must-have features → condense to a one-line "Existing capabilities" summary section at the top (the detail is in the code now, not the spec)
-- Should/Could items promoted to Must → move them, mark `(was {previous band} — promoted in cycle {N})`
-- Won't items that are now in scope → move them, mark `(was Won't — promoted in cycle {N})`
-- Won't items that are still Won't → keep as-is
-- Success metrics for shipped features → move to an "Achieved" subsection if met, keep in place with a note if not yet measured
-- Bump the version line: `Version {X}.0 · {date} · Cycle {N}`
-
-### TECH_SPEC refresh rules (applied by `/pipeme next`)
-
-When refreshing `TECH_SPEC.md` for a new cycle:
-- Stable, shipped components that are NOT being touched this cycle → condense to a summary table:
-
-```markdown
-## Established Components (stable — not scoped for this cycle)
-| Component | Purpose | Status |
-|---|---|---|
-| {name} | {one line} | shipped, stable |
-```
-
-- Components being extended or modified → keep full detail
-- API contracts for existing services that new features will call → keep (agents need them for integration)
-- New components/services → add with full detail per the standard template
-- Bump the version line: `Version {X}.0 · {date} · Cycle {N}`
+Human reference only — not added to `CLAUDE.md`'s routing table. A fresh `ROADMAP.md` starts at the next phase number; the Risks table is the one thing that carries forward.
 
 ---
 
 ## AGENTS.md
 
-`AGENTS.md` is the **rationale appendix and cross-tool map** — not a second copy of the rules. `CLAUDE.md` and the nested directory files hold the rules, because they load automatically and cheaply. Duplicating them here guarantees drift: two copies of a convention diverge the first time one is edited.
-
-This file carries what does *not* belong in an always-loaded file: the reasoning behind constraints that agents are tempted to weaken, and a map for agents that don't auto-load `CLAUDE.md`.
-
-```markdown
-# AGENTS.md — {Product Name}
-
-**This file is the rationale appendix, not the rule list.** The rules live where they load cheapest:
-
-| What | Where | Loads |
-|---|---|---|
-| Hard constraints, commands, definition of done, git | `/CLAUDE.md` (repo root) | every session |
-| {Surface} conventions | `/{dir}/CLAUDE.md` | when working in `{dir}/` |
-| {Surface} conventions | `/{dir}/CLAUDE.md` | when working in `{dir}/` |
-
-Every rule lives in exactly one place. If you're an agent that doesn't auto-load `CLAUDE.md`, read the root file plus the directory file for wherever you're working — that is the complete rule set.
-
-This file exists for the handful of constraints whose *reasoning* matters when you're tempted to change them. Read the relevant entry before weakening a rule, never as routine bootstrap.
-
----
-
-**Entry cap (hard):** every `## Why …` entry is **2–3 sentences total** — a bold one-line rule, at most one more line of rationale, and (only if needed) one pointer (code comment, log file, or commit hash) for the full story. Not 2-3 sentences of rule plus 2-3 more of rationale — 2-3 sentences, full stop. War stories, debugging chronologies, and multi-paragraph forensics go in the pointed-to place, never here — an oversized rationale file stops being read, which defeats its purpose. `/pipeme update`, `/pipeme next`, and `/pipeme clean` all flag entries past the cap.
+Shape and hard rules: `document-rules.md §AGENTS.md`.
 
 **Worked example — restate as rule + consequence, don't just shorten the incident report:**
 
@@ -280,217 +129,32 @@ skips before scanning ever runs. Full detail: docs/TESTING_LOG.md."
 
 What moved: the fixture citation and the specific integration's name (evidence — cut, git/testing-log has it), and — the part that isn't just a length cut — "this is what silently killed a real ATS integration... a permanent bailout, not a timing issue" got rewritten from *what happened* into *what the rule prevents* ("or the pipeline skips before scanning ever runs"). Same for "Live-verified fix": not shortened, removed — a fix being verified is a testing-log fact, not a spec fact. `AGENTS.md` is an instructions file: every surviving sentence should read as a standing rule an agent could violate today, not a report of something that was true once. If an entry only makes sense as "X broke, here's how we fixed it," that's the signal to reframe it as a consequence, not to trim it.
 
-## Why {constraint} is {stricter/broader} than it looks
-
-{The reasoning. Include the asymmetry that justifies it — what a false
-positive costs vs. what a false negative costs. Agents narrow over-broad
-rules unless told why the breadth is deliberate.}
-
-## Why {architectural choice} is the way it is
-
-{Reasoning for a decision that looks wrong or inconsistent without context —
-the deliberate exception to a stated convention, and what breaks without it.}
-
-## Why {doc/file} is frozen / absent / not to be extended
-
-{Reasoning for negative space: things deliberately missing or off-limits.
-Absences get "helpfully" filled in unless the absence is explained.}
-
-## Capability limits & escalation
-
-Roadmap tasks carry ownership tags: 🤖 agent-executable, 👤 human-only, 🤝 hybrid. Human-only triggers are external accounts, API keys, purchases, human-reviewed submissions, legal signatures, CAPTCHAs/2FA, live third-party testing, and production secrets.
-
-On a 👤 or 🤝 task: do the 🤖-executable part, then **stop and report** — what's blocked, why, and exactly what the human must do. Never mock, stub, or simulate a blocked capability and report it done; a mock is allowed only if labeled `MOCK:` in code *and* reported.
-
-If a task turns out impossible or wrongly scoped, say so and propose a re-scope — never silently deliver a lookalike.
-```
-
-**Hard cap: at most 8 `## Why …` entries, total, at any time.** Not "typical" — enforced the same way the per-entry sentence cap is. Write a section only where the reasoning genuinely changes behavior. Once at 8, adding a 9th means cutting or merging an existing one first — never just appending. A file with a section per constraint has become the rule list again, and an 8-entry cap that only ever grows is still unbounded over enough cycles; see the pruning rule in `/pipeme next`'s document handling.
-
-**Pruning test, when deciding what to cut at cap:** would a competent agent still plausibly "fix away" this constraint on first read, without the explanation? If the reasoning is now embedded in a test, a code comment, or the constraint has simply gone unquestioned across multiple cycles, its explanation may have stopped being load-bearing — cut it, the code itself now carries the constraint. If it still reads exactly like a bug on first encounter (a deliberately over-broad matcher, a frozen file, a missing feature that looks like an oversight), that risk doesn't fade with time — keep it. Age alone is never the reason to cut; being no-longer-surprising is.
-
-Universal hard constraints (never commit secrets, never force-push shared history, never disable auth "temporarily", never run destructive migrations without a confirmed backup, never push to production without passing the Definition of Done) belong in the root `CLAUDE.md` constraint list alongside the product-specific ones — they are safety-critical and must load every session.
-
 ---
 
 ## DIAGRAMS.md
 
-```markdown
-# {Product Name} — Diagrams
-
-## User Flow
-​```mermaid
-flowchart TD
-​```
-
-## Architecture
-​```mermaid
-flowchart LR
-​```
-
-## Data Model  (Full Mode)
-​```mermaid
-erDiagram
-​```
-
-## Key Sequences  (Full Mode — only flows with non-obvious logic, e.g. auth, payment, AI pipeline)
-​```mermaid
-sequenceDiagram
-​```
-```
-
-Keep each diagram under ~25 nodes. Split rather than cram.
+Shape and hard rules: `document-rules.md §DIAGRAMS.md`.
 
 ---
 
 ## No changelog
 
-PipeMe does not generate `CHANGELOG.md`. Git history already records *what* changed and when, at higher fidelity and zero context cost. A prose changelog duplicates it, grows without bound, and — measured on real projects — is written far more often than it is read.
-
-What git cannot hold is **why a rule exists**, which is what stops a future agent from "helpfully" undoing it. That belongs in `AGENTS.md` as a `## Why …` section (see its template). Update and Next Cycle modes route reasoning there; everything else is left to git.
-
-If a project already has a `CHANGELOG.md` from an older PipeMe version, don't delete it unasked — mention that it's no longer maintained and offer to remove it, noting git retains the content either way.
+Not produced — see `document-rules.md`'s "Not produced, ever." If a project already has a `CHANGELOG.md` from an older PipeMe version, don't delete it unasked: mention it's no longer maintained and offer to remove it, noting git retains the content either way.
 
 ---
 
 ## HANDOFF.md
 
-```markdown
-# {Product Name} — Handoff Brief
-> Generated by /pipeme handoff · {date}
-
-## Project
-{2-3 bullets from PRD: problem, users, value}
-
-## Status
-Current phase: {N} — {name}
-- Done: {phases/tasks complete}
-- In progress: {current phase tasks}
-- Pending: {remaining phases, one line each}
-
-## Key Decisions
-{Bulleted, from TECH_SPEC — decisions only, not full spec}
-
-## Hard Constraints
-{From AGENTS.md — the never-do list}
-
-## Recent Changes
-{Condensed timeline from `git log --oneline -20` — notable changes only, not every commit}
-
----
-Full docs: CLAUDE.md (+ nested {dir}/CLAUDE.md), PRD.md, TECH_SPEC.md, ROADMAP.md, AGENTS.md, DIAGRAMS.md
-```
-
-Keep to roughly one screen. This is a compression, not a re-export.
+Shape and hard rules: `document-rules.md §HANDOFF.md`.
 
 ---
 
-## CLAUDE.md
+## `CLAUDE.md` (root)
 
-**This file is auto-loaded into every single conversation turn.** Its size is a permanent tax on the project. Everything in it must be either (a) safety-critical, or (b) needed in the majority of sessions. Everything else is a conditional pointer with its cost labeled.
-
-**Never write a "read these files at session start" list.** That is the single most expensive mistake in this template — it converts every referenced file's size into a per-session cost. Write conditional triggers instead: *"When doing X, read Y (~N tokens)."*
-
-Target: **600–1,000 tokens.** Measure before delivering (see Token budgeting below).
-
-```markdown
-# CLAUDE.md — {Product Name}
-
-{One-line product description: what it is, who for, key compliance/domain context.}
-
-**Current phase: {N} — {name}.** {One line: what's done, what's blocked.}
-
-## Golden constraints (never violate)
-
-{The full hard-constraint list, one terse line each. These are safety-critical —
-they load every session by design. Compress the rationale out, not the rule.
-Point to AGENTS.md for the two or three whose reasoning matters when tempted.}
-
-Extended rationale for constraints {N, N}: `docs/AGENTS.md`.
-
-## Commands
-
-```
-{dev / build / lint / test / syntax-check — the ones run most often}
-```
-
-{One line on any non-obvious local setup, e.g. required .env file, manual load steps.}
-
-{If no test suite exists, say so explicitly here — agents assume one does.}
-
-## Definition of done
-
-{Single dense line, criteria separated by · — not a bulleted list.}
-
-## Working rules
-
-- Update task status in `ROADMAP.md` **in the file, immediately** — not at session end. **The row must not grow at completion**: status + date + optionally one `Note:` pointer line. Never write build narrative, evidence, rationale, or warnings into a task row.
-- Route execution knowledge, don't dump it: *what happened / how* → the git commit message; *why a rule exists* → `AGENTS.md ## Why …` (capped format); *testing/verification narratives* → the project's testing log file. Anything captured in git or a code comment is never restated in a doc — docs hold only what changes future behavior. When in doubt, prefer deletion over relocation.
-- Don't skip ahead to an easier task; `Depends on` exists for a reason.
-- Don't invent scope outside PRD/ROADMAP — flag the gap instead.
-- Scope changes go through `/pipeme update`, not ad-hoc doc edits.
-- On a 👤/🤝 task, do the 🤖 part then stop. Never mock a blocked capability and report it done.
-- After context compaction: re-read this file, then reconcile `ROADMAP.md` against actual code. Code checked against `Done when:` decides.
-
-## Git
-
-{Branch policy · commit/push policy · commit granularity. Two lines max.}
-
-## Load only what the task needs
-
-Directory rules load automatically when you open files there: {list nested CLAUDE.md paths}. Everything below is a deliberate read — check the cost first.
-
-| Read when | File | ~Tokens |
-|---|---|---|
-| You need task detail / acceptance criteria | `docs/ROADMAP.md` | {N} |
-| Scope or non-goals are in question | `docs/PRD.md` | {N} |
-| Writing backend/architecture code | `docs/TECH_SPEC.md` | {N} |
-| You need a constraint's full rationale | `docs/AGENTS.md` | {N} |
-| Writing tests or QA gates | `TECH_SPEC.md §Testing` | {N} |
-| You need a diagram | `docs/DIAGRAMS.md` | {N} |
-
-There is no changelog. `git log` is the record of what changed; `docs/AGENTS.md` holds the *why* behind decisions that still constrain the code.
-
-{Any conditional trigger with real consequences, e.g. legal/compliance documents
-that must be read before touching specific features. Name the actions, state the
-consequence of skipping.}
-
-## Maintenance
-
-Maintained by PipeMe. `/pipeme phase` and `/pipeme next` update the Current Phase line; `/pipeme claude.md` regenerates. **This file's structure is a token budget — regeneration must preserve the always-on/on-demand split, not flatten it back into a session-start reading list.**
-```
-
-**Purity note (Golden Rule 7):** this is the highest-cost file in the whole suite — every line here is paid on every turn, forever. A golden constraint is a terse, standing rule, never a dated status ("As of {date}, X is connected") and never tagged with when it was added ("⭐ Cycle 3"). If a constraint needs history to make sense, that history belongs in `AGENTS.md`, not folded into the always-loaded line.
+Shape and hard rules: `document-rules.md §CLAUDE.md (root)`.
 
 ### Nested `CLAUDE.md` files (generate one per major surface)
 
-Claude Code loads a directory's `CLAUDE.md` **only when it reads files in that directory**. This is the primary lever for keeping the root file small: per-surface conventions cost nothing until they're relevant.
+Shape and hard rules: `document-rules.md §{dir}/CLAUDE.md (nested)`. Generate one for each top-level code surface the architecture implies (`frontend/`, `backend/`, `extension/`, `mobile/`, `infra/`, …).
 
-Generate one for each top-level code surface (`frontend/`, `backend/`, `extension/`, `mobile/`, `infra/`, …), 200–500 tokens each:
-
-```markdown
-# {dir}/ — {stack summary}
-
-Loaded automatically when working in this directory. Golden constraints live in the root `CLAUDE.md`{, note which ones bind hardest here}.
-
-## Conventions
-{Stack-specific patterns, file layout, framework choices, naming.}
-
-## Rules with teeth
-{Conventions where violating has a real consequence. State the consequence —
-"a table left off this list silently breaks the GDPR export promise" beats
-"keep X in sync". Consequence framing, not incident framing (Golden Rule 7) —
-never "X already drifted once" or "X was missing until Cycle N." What the rule
-protects against, not what happened before it existed.}
-
-## {Domain-specific section as needed}
-```
-
-**Purity applies here too (Golden Rule 7) — `CLAUDE.md` and nested files are held to it hardest, since they're paid on every turn, not read on demand.** No dated status ("As of {date}, X is connected"), no cycle/version markers on a rule ("⭐ Cycle 3: ...", "new in Cycle N"), no incident framing ("has drifted before", "was removed in Cycle N", "replaced Cycle N's X") — state the rule and, if needed, the consequence, nothing else. 2–3 sentences, same cap as everywhere else.
-
-**Every rule lives in exactly one file — three ways this breaks, all real:** (1) a rule in both `AGENTS.md` and a nested file — replace the `AGENTS.md` copy with a pointer; (2) a **root `CLAUDE.md` constraint restated in a nested file** instead of just referenced — a nested file loads *in addition to* root, never instead of it, so restating constraint 9 or 12 in `supabase/CLAUDE.md` pays for it twice, every session that touches that directory, for zero benefit; point to it by number, don't repeat its text. (3) **the same surface-spanning rule written out in full in two different nested files** — e.g. a "new table needs a `USER_TABLES` export entry" rule relevant to both `supabase/` and `dashboard/` — pick the one file where the rule is enforced or most naturally lives, state it there, and leave a one-line pointer from the other.
-
-Purity linter and token budgeting: both mandatory, both run once over the whole suite — see **Mandatory Mechanical Checks** at the top of this file, not repeated here.
-
----
-
+Purity linter and token budgeting: see **Mandatory Mechanical Checks** above — run once, over the whole suite, not per file.
