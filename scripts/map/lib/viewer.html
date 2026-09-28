@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<!-- MAP — __COMMENT__ -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__ · code map</title>
+<style>
+:root {
+  --bg: #f5f5f2; --panel: #ffffff; --text: #1c1c1a; --muted: #686863; --line: #dcdbd5;
+  --dir: #ebeae5; --file: #d6e0e9; --test: #cde7c9; --dead: #e39b94; --unused: #f1c4bd; --pair: #f1d49a; --keep: #d3caf0;
+  --accent: #1f55d0; --in: #c8205f; --out: #17805a; --hatch: rgba(0, 0, 0, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151514; --panel: #1e1e1d; --text: #ebeae4; --muted: #a3a29b; --line: #363531;
+    --dir: #262624; --file: #2b3947; --test: #2e4d33; --dead: #93403a; --unused: #6e3a35; --pair: #6b5423; --keep: #48407f;
+    --accent: #7ea6ff; --in: #ff76a8; --out: #56d49c; --hatch: rgba(255, 255, 255, .09);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text);
+  height: 100vh; display: grid; grid-template-rows: auto auto 1fr; }
+header { padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+h1 { font-size: 15px; margin: 0; }
+.muted { color: var(--muted); font-weight: 400; }
+#q { flex: 1 1 220px; max-width: 420px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; }
+#chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 999px; padding: 1px 10px; font: inherit; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; border: 1px solid var(--line); vertical-align: -1px; }
+#crumbs { padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 2px 4px; align-items: center; }
+#crumbs button, .link { border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; padding: 0; text-align: left; overflow-wrap: anywhere; }
+main { display: grid; grid-template-columns: 1fr minmax(300px, 380px); min-height: 0; }
+#map { position: relative; margin: 0 8px 12px 16px; min-height: 0; }
+aside { border-left: 1px solid var(--line); background: var(--panel); overflow: auto; padding: 12px 16px 24px; min-height: 0; }
+.b { position: absolute; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; padding: 3px 5px; text-align: left; font: inherit;
+  color: var(--text); cursor: pointer; background-color: var(--file); display: flex; flex-direction: column; justify-content: flex-start; }
+.b > span { min-width: 0; }
+.b .n { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.b .m { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.b.tiny .n, .b.tiny .m { display: none; }
+.inner { position: absolute; pointer-events: none; }
+.kid { position: absolute; border: 1px solid var(--dir); border-radius: 2px; background-color: var(--file); pointer-events: none; overflow: hidden; font-size: 11px; color: var(--muted); }
+.kid .kl { display: block; padding: 1px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kid.dir { border-color: var(--line); }
+.dir { background-color: var(--dir); }
+.test { background-color: var(--test); }
+.unused { background-color: var(--unused); }
+.dead { background-color: var(--dead); }
+.pair { background-color: var(--pair); }
+.keep { background-color: var(--keep); }
+.untested { background-image: repeating-linear-gradient(135deg, var(--hatch) 0 4px, transparent 4px 8px); }
+.b.large { border: 2px solid var(--text); }
+.b.sel { outline: 3px solid var(--accent); outline-offset: -3px; z-index: 2; }
+.b.in { outline: 2px dashed var(--in); outline-offset: -2px; z-index: 1; }
+.b.out { outline: 2px dashed var(--out); outline-offset: -2px; z-index: 1; }
+.b.dim, .kid.dim { opacity: .2; }
+.b:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+aside h2 { font-size: 14px; margin: 0 0 2px; overflow-wrap: anywhere; }
+aside h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 16px 0 4px; }
+aside p { margin: 4px 0; }
+aside ul { list-style: none; margin: 0; padding: 0; }
+aside li { padding: 1px 0; }
+.sym { width: 100%; border: 0; background: none; text-align: left; font: inherit; color: inherit; padding: 3px 4px; border-radius: 4px; cursor: pointer;
+  display: grid; grid-template-columns: 5.5em 1fr; gap: 0 8px; }
+.sym:hover, .sym:focus-visible { background: var(--bg); }
+.rng { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sig { overflow-wrap: anywhere; }
+.st { color: var(--muted); font-size: 12px; }
+.tag { display: inline-block; font-size: 11px; padding: 0 6px; margin-left: 4px; border-radius: 999px; background: var(--unused); color: var(--text); }
+.tag.pair { background: var(--pair); } .tag.keep { background: var(--keep); } .tag.dead { background: var(--dead); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.hit { color: var(--muted); font-size: 12px; margin-left: 12px; overflow-wrap: anywhere; }
+#toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 6px 12px;
+  border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; overflow-wrap: anywhere; }
+#toast.on { opacity: 1; }
+@media (max-width: 760px) {
+  body { height: auto; }
+  main { grid-template-columns: 1fr; }
+  #map { height: 65vh; margin: 0 16px 12px; }
+  aside { border-left: 0; border-top: 1px solid var(--line); }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>__TITLE__ <span class="muted">· code map</span></h1>
+  <input id="q" type="search" placeholder="Find a function, label, route, storage key, file…  ( / )" aria-label="Search the map">
+  <div id="chips" role="group" aria-label="Show only"></div>
+  <span class="muted" id="stats"></span>
+</header>
+<nav id="crumbs" aria-label="Folder path"></nav>
+<main>
+  <div id="map" role="group" aria-label="Files and folders, sized by lines of code"></div>
+  <aside id="side" aria-live="polite"></aside>
+</main>
+<div id="toast" role="status"></div>
+<script type="application/json" id="map-data">[
+__MAP_DATA__
+]</script>
+<script>
+(() => {
+  // ---- data: one record per line, a file's records follow its F row
+  const rows = JSON.parse(document.getElementById('map-data').textContent);
+  const meta = { name: '', systemMap: '', command: '', large: 800 };
+  const purposes = new Map();
+  const files = new Map();
+  let cur = null;
+  for (const r of rows) {
+    const t = r[0];
+    if (t === 'H') [, meta.name, meta.systemMap, meta.command, meta.large] = r;
+    else if (t === 'G') purposes.set(r[1], r[2]);
+    else if (t === 'F') {
+      cur = { path: r[1], lines: r[2], test: !!r[3], deadFile: !!r[4], purpose: r[5], tests: [], users: [], uses: [], routes: [], calls: [],
+        data: [], notInSchema: [], storage: [], messages: [], pairs: [], labels: [], invariants: [], symbols: [] };
+      files.set(cur.path, cur);
+    } else if (!cur) continue;
+    else if (t === 'T') cur.tests.push(r[1]);
+    else if (t === 'U') cur.users.push(r[1]);
+    else if (t === 'R') cur.routes.push(r[1]);
+    else if (t === 'C') cur.calls.push(r[1]);
+    else if (t === 'D') cur.data.push(r[1]);
+    else if (t === 'N') cur.notInSchema.push(r[1]);
+    else if (t === 'K') cur.storage.push(`${r[1]} ${r[2]}`);
+    else if (t === 'M') cur.messages.push(`${r[1]} ${r[2]}`);
+    else if (t === 'P') cur.pairs.push(r[1]);
+    else if (t === 'L') cur.labels.push(r[1]);
+    else if (t === 'I') cur.invariants.push({ line: r[1], text: r[2] });
+    else if (t === 'S') cur.symbols.push({ name: r[1], kind: r[2], start: r[3], end: r[4], sig: r[5], status: r[6], tags: r[7] ? r[7].split('|') : [] });
+  }
+  for (const f of files.values()) for (const u of f.users) if (files.has(u)) files.get(u).uses.push(f.path);
+
+  const KINDS = [
+    ['unused', 'unused', 'Unused'], ['tests-only', 'unused', 'Tests only'], ['unused-file', 'dead', 'Unused file'], ['half-pair', 'pair', 'Half-pair'],
+    ['not-in-schema', 'pair', 'Not in schema'], ['keep', 'keep', 'Keep until'], ['no-tests', 'untested', 'No tests'], ['large', 'large', 'Large file'],
+  ];
+  for (const f of files.values()) {
+    const k = new Set();
+    if (f.deadFile) k.add('unused-file');
+    for (const s of f.symbols) for (const tg of s.tags) k.add(tg.startsWith('keep') ? 'keep' : tg);
+    if (f.pairs.length) k.add('half-pair');
+    if (f.notInSchema.length) k.add('not-in-schema');
+    if (!f.test && !f.tests.length) k.add('no-tests');
+    if (f.lines > meta.large) k.add('large');
+    f.kinds = k;
+    f.leads = f.symbols.filter((s) => s.tags.length).length + f.pairs.length + f.notInSchema.length + (f.deadFile ? 1 : 0);
+  }
+  const fillOf = (f) => (f.kinds.has('unused-file') ? 'dead' : f.kinds.has('unused') || f.kinds.has('tests-only') ? 'unused'
+    : f.kinds.has('half-pair') || f.kinds.has('not-in-schema') ? 'pair' : f.kinds.has('keep') ? 'keep' : f.test ? 'test' : '');
+
+  // ---- folder tree
+  const node = (name, p, parent) => ({ name, path: p, parent, dirs: new Map(), files: [], all: [], lines: 0 });
+  const root = node(meta.name, '', null);
+  for (const f of files.values()) {
+    const parts = f.path.split('/');
+    let d = root;
+    root.all.push(f); root.lines += f.lines;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!d.dirs.has(parts[i])) d.dirs.set(parts[i], node(parts[i], parts.slice(0, i + 1).join('/'), d));
+      d = d.dirs.get(parts[i]);
+      d.all.push(f); d.lines += f.lines;
+    }
+    d.files.push(f);
+    f.dir = d;
+  }
+  const squash = (d) => { let x = d; while (!x.files.length && x.dirs.size === 1) x = [...x.dirs.values()][0]; return x; };
+  const children = (d) => [
+    ...[...d.dirs.values()].map((c) => { const s = squash(c); return { dir: s, label: `${s.path.slice(d.path ? d.path.length + 1 : 0)}/`, v: Math.max(s.lines, 1) }; }),
+    ...d.files.map((f) => ({ file: f, label: f.path.split('/').pop(), v: Math.max(f.lines, 1) })),
+  ].sort((a, b) => b.v - a.v || a.label.localeCompare(b.label));
+  const top = squash(root);
+
+  // ---- state (kept in the URL hash so back/forward work)
+  let here = top, selected = null, query = '';
+  const active = new Set();
+  let hits = new Map(); // path → hit list, only while searching or filtering
+  const filtering = () => query !== '' || active.size > 0;
+  const findDir = (p) => { let d = root; if (!p) return top; for (const part of p.split('/')) { d = d.dirs.get(part); if (!d) return top; } return d; };
+
+  function computeHits() {
+    hits = new Map();
+    if (!filtering()) return;
+    const q = query.toLowerCase();
+    for (const f of files.values()) {
+      if (active.size && ![...active].some((k) => f.kinds.has(k))) continue;
+      if (!q) { hits.set(f.path, []); continue; }
+      const out = [];
+      if (f.path.toLowerCase().includes(q)) out.push({ text: 'file path' });
+      for (const s of f.symbols) if (s.name.toLowerCase().includes(q)) out.push({ text: `${s.kind} ${s.sig}`, s });
+      for (const [kind, list] of [['route', f.routes], ['call', f.calls], ['label', f.labels], ['storage', f.storage], ['message', f.messages], ['data', f.data]]) {
+        for (const v of list) if (v.toLowerCase().includes(q)) out.push({ text: `${kind}: ${v}` });
+      }
+      if (out.length) hits.set(f.path, out);
+    }
+  }
+
+  // ---- squarified treemap
+  function squarify(items, x, y, w, h) {
+    const total = items.reduce((s, it) => s + it.v, 0);
+    if (!total || w <= 0 || h <= 0) return [];
+    const scale = (w * h) / total;
+    const out = [];
+    let row = [];
+    const worst = (r, side) => {
+      let s = 0, mx = 0, mn = Infinity;
+      for (const e of r) { s += e.a; mx = Math.max(mx, e.a); mn = Math.min(mn, e.a); }
+      return Math.max((side * side * mx) / (s * s), (s * s) / (side * side * mn));
+    };
+    const place = () => {
+      const s = row.reduce((t, e) => t + e.a, 0);
+      if (w >= h) { const cw = s / h; let cy = y; for (const e of row) { const eh = e.a / cw; out.push({ it: e.it, x, y: cy, w: cw, h: eh }); cy += eh; } x += cw; w -= cw; }
+      else { const rh = s / w; let cx = x; for (const e of row) { const ew = e.a / rh; out.push({ it: e.it, x: cx, y, w: ew, h: rh }); cx += ew; } y += rh; h -= rh; }
+      row = [];
+    };
+    for (const it of items) {
+      const e = { it, a: it.v * scale };
+      if (row.length && worst([...row, e], Math.min(w, h)) > worst(row, Math.min(w, h))) place();
+      row.push(e);
+    }
+    if (row.length) place();
+    return out;
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => n.toLocaleString('en-US');
+  function el(tag, props, ...kids) {
+    const e = document.createElement(tag);
+    if (props) for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+    }
+    for (const k of kids) if (k != null) e.append(k);
+    return e;
+  }
+  const plural = (n, w) => `${fmt(n)} ${w}${n === 1 ? '' : 's'}`;
+  const range = (s) => (s.start === s.end ? `:${s.start}` : `:${s.start}-${s.end}`);
+
+  // ---- the map
+  const mapEl = $('map');
+  // a folder's contents drawn inside its block, as deep as there's room, labelled where they fit; clicks go to the block itself
+  function drawKids(parent, d, w, h) {
+    for (const k of squarify(children(d), 0, 0, w, h)) {
+      const kid = el('div', { class: 'kid', style: `left:${k.x}px;top:${k.y}px;width:${Math.max(k.w, 0)}px;height:${Math.max(k.h, 0)}px` });
+      if (k.w > 64 && k.h > 18) kid.append(el('span', { class: 'kl', text: k.it.label }));
+      if (k.it.dir) {
+        kid.classList.add('dir');
+        if (k.w > 60 && k.h > 48) {
+          const inner = el('div', { class: 'inner', style: `left:2px;top:17px;width:${k.w - 6}px;height:${k.h - 21}px` });
+          drawKids(inner, k.it.dir, k.w - 6, k.h - 21);
+          kid.append(inner);
+        }
+        if (filtering() && !k.it.dir.all.some((f) => hits.has(f.path))) kid.classList.add('dim');
+      } else {
+        const fl = fillOf(k.it.file);
+        if (fl) kid.classList.add(fl);
+        if (k.it.file.kinds.has('no-tests')) kid.classList.add('untested');
+        if (filtering() && !hits.has(k.it.file.path)) kid.classList.add('dim');
+      }
+      parent.append(kid);
+    }
+  }
+  function drawMap() {
+    mapEl.textContent = '';
+    const W = mapEl.clientWidth, H = mapEl.clientHeight;
+    const inRel = new Set(selected ? [...selected.users, ...selected.tests] : []);
+    const outRel = new Set(selected ? selected.uses : []);
+    for (const r of squarify(children(here), 0, 0, W, H)) {
+      const w = Math.max(r.w - 2, 0), h = Math.max(r.h - 2, 0);
+      const b = el('button', { class: 'b', style: `left:${r.x + 1}px;top:${r.y + 1}px;width:${w}px;height:${h}px` });
+      if (w < 44 || h < 22) b.classList.add('tiny');
+      if (r.it.dir) {
+        const d = r.it.dir;
+        const leads = d.all.reduce((s, f) => s + f.leads, 0);
+        b.classList.add('dir');
+        b.append(el('span', { class: 'n', text: r.it.label }), el('span', { class: 'm', text: `${plural(d.all.length, 'file')} · ${fmt(d.lines)} lines${leads ? ` · ${plural(leads, 'lead')}` : ''}` }));
+        b.title = `${d.path}/ — open this folder`;
+        b.addEventListener('click', () => nav({ dir: d.path }));
+        if (w > 90 && h > 70) {
+          const inner = el('div', { class: 'inner', style: `left:3px;top:38px;width:${w - 8}px;height:${h - 42}px` });
+          drawKids(inner, d, w - 8, h - 42);
+          b.append(inner);
+        }
+        if (filtering()) { const n = d.all.filter((f) => hits.has(f.path)).length; if (!n) b.classList.add('dim'); else b.querySelector('.m').textContent = `${plural(n, 'match')} of ${plural(d.all.length, 'file')}`; }
+        if (d.all.some((f) => inRel.has(f.path))) b.classList.add('in'); else if (d.all.some((f) => outRel.has(f.path))) b.classList.add('out');
+      } else {
+        const f = r.it.file;
+        const fl = fillOf(f);
+        if (fl) b.classList.add(fl);
+        if (f.kinds.has('no-tests')) b.classList.add('untested');
+        if (f.kinds.has('large')) b.classList.add('large');
+        b.append(el('span', { class: 'n', text: r.it.label }), el('span', { class: 'm', text: `${fmt(f.lines)} lines${f.leads ? ` · ${plural(f.leads, 'lead')}` : ''}` }));
+        b.title = f.path;
+        b.addEventListener('click', () => nav({ dir: here.path, file: f.path }));
+        if (filtering() && !hits.has(f.path)) b.classList.add('dim');
+        if (f === selected) b.classList.add('sel'); else if (inRel.has(f.path)) b.classList.add('in'); else if (outRel.has(f.path)) b.classList.add('out');
+      }
+      mapEl.append(b);
+    }
+    if (!files.size) mapEl.append(el('p', { text: 'No source files in this map.' }));
+  }
+
+  function drawCrumbs() {
+    const c = $('crumbs');
+    c.textContent = '';
+    const chain = [];
+    for (let d = here; d; d = d.parent) { chain.unshift(d); if (d === top) break; }
+    chain.forEach((d, i) => {
+      if (i) c.append(el('span', { class: 'muted', text: '/' }));
+      const label = d === top ? (top.path ? `${meta.name} / ${top.path}` : meta.name) : d.name;
+      c.append(i === chain.length - 1 ? el('strong', { text: label }) : el('button', { text: label, onclick: () => nav({ dir: d.path }) }));
+    });
+  }
+
+  // ---- side panel
+  const side = $('side');
+  const put = (...nodes) => side.append(...nodes.filter((n) => n != null));
+  const openFile = (p) => { const f = files.get(p); if (f) nav({ dir: f.dir.path, file: p }); };
+  const fileLink = (p, extra) => el('li', null, el('button', { class: 'link', text: p, onclick: () => openFile(p) }), extra ? el('span', { class: 'hit', text: extra }) : null);
+  const tagClass = (t) => (t === 'unused-file' ? 'dead' : t.startsWith('keep') ? 'keep' : t === 'half-pair' || t === 'not-in-schema' ? 'pair' : '');
+  const tagEl = (t) => el('span', { class: `tag ${tagClass(t)}`, text: t });
+  function symRow(f, s) {
+    const restated = s.tags.some((t) => t.replace('-', ' ') === s.status); // "unused [unused]" says it twice
+    return el('li', null, el('button', { class: 'sym', title: `Copy ${f.path}${range(s)}`, onclick: () => copy(`${f.path}${range(s)}`) },
+      el('span', { class: 'rng', text: range(s).slice(1) }),
+      el('span', null, el('span', { class: 'sig', text: `${s.kind} ${s.sig}` }), restated ? null : el('span', { class: 'st', text: ` · ${s.status}` }), ...s.tags.map(tagEl))));
+  }
+  const section = (title, list) => (list.length ? [el('h3', { text: title }), el('ul', null, ...list)] : []);
+  const textList = (items, max = 40) => items.slice(0, max).map((t) => el('li', { text: t })).concat(items.length > max ? [el('li', { class: 'muted', text: `+${items.length - max} more` })] : []);
+
+  function drawFile(f) {
+    const facts = [plural(f.lines, 'line'), f.test ? 'test file' : f.tests.length ? plural(f.tests.length, 'test') : 'no tests'];
+    if (f.kinds.has('large')) facts.push('large: read by range');
+    const leads = [];
+    if (f.deadFile) leads.push(el('li', null, 'Nothing imports, loads or names this file', tagEl('unused-file')));
+    for (const p of f.pairs) leads.push(el('li', null, p, tagEl('half-pair')));
+    for (const n of f.notInSchema) leads.push(el('li', null, `${n} — no SQL file creates it`, tagEl('not-in-schema')));
+    put(
+      el('button', { class: 'link', text: '← back to the folder', onclick: () => nav({ dir: here.path }) }),
+      el('h2', { text: f.path }),
+      el('p', { class: 'muted', text: facts.join(' · ') }),
+      f.purpose ? el('p', { text: f.purpose }) : null,
+      ...section('Leads — check before deleting', leads),
+      ...section('Routes', textList(f.routes)), ...section('Calls', textList(f.calls)), ...section('Data', textList(f.data)),
+      ...section('Storage', textList(f.storage)), ...section('Messages', textList(f.messages)),
+      ...section('Invariants', f.invariants.map((i) => el('li', { text: `:${i.line}  ${i.text}` }))),
+      ...section(`Used by (${f.users.length})`, f.users.map((p) => fileLink(p))),
+      ...section(`Uses (${f.uses.length})`, f.uses.map((p) => fileLink(p))),
+      ...section(`Tests (${f.tests.length})`, f.tests.map((p) => fileLink(p))),
+      ...section(`Functions (${f.symbols.length}) — click to copy path:lines`, f.symbols.map((s) => symRow(f, s))),
+      ...section('Labels', textList(f.labels)),
+    );
+  }
+
+  function drawResults() {
+    const list = [...hits.keys()].filter((p) => here === top || p.startsWith(`${here.path}/`)).sort();
+    const what = [query ? `“${query}”` : null, ...[...active].map((k) => KINDS.find((x) => x[0] === k)[2].toLowerCase())].filter(Boolean).join(' + ');
+    side.append(el('h2', { text: `${plural(list.length, 'file')} match ${what}` }), el('p', { class: 'muted', text: here === top ? 'In the whole project.' : `In ${here.path}/.` }));
+    const ul = el('ul');
+    for (const p of list.slice(0, 200)) {
+      const f = files.get(p);
+      ul.append(fileLink(p));
+      const hs = hits.get(p);
+      if (hs.length) for (const h of hs.slice(0, 8)) ul.append(h.s ? symRow(f, h.s) : el('li', { class: 'hit', text: h.text }));
+      else for (const s of f.symbols.filter((s) => s.tags.some((t) => active.has(t.startsWith('keep') ? 'keep' : t))).slice(0, 8)) ul.append(symRow(f, s));
+    }
+    if (list.length > 200) ul.append(el('li', { class: 'muted', text: `+${list.length - 200} more — narrow the search` }));
+    side.append(ul);
+  }
+
+  function drawFolder(d) {
+    const inside = (p) => d === root || d === top && !top.path || p.startsWith(`${d.path}/`);
+    const group = (p) => { const parts = p.split('/'); return parts.length > 2 ? parts.slice(0, 2).join('/') : parts.length === 2 ? parts[0] : '(root)'; };
+    const usedFrom = new Map(), usesOut = new Map();
+    for (const f of d.all) {
+      for (const u of f.users) if (!inside(u)) usedFrom.set(group(u), (usedFrom.get(group(u)) || new Set()).add(u));
+      for (const u of f.uses) if (!inside(u)) usesOut.set(group(u), (usesOut.get(group(u)) || new Set()).add(u));
+    }
+    const deps = (m) => [...m].sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0])).map(([g, s]) => el('li', null, el('button', { class: 'link', text: `${g}/`, onclick: () => nav({ dir: g === '(root)' ? '' : g }) }), el('span', { class: 'hit', text: plural(s.size, 'file') })));
+    const leadRows = [];
+    for (const f of d.all) {
+      if (f.deadFile) leadRows.push(fileLink(f.path, 'unused file'));
+      for (const s of f.symbols) if (s.tags.length) leadRows.push(el('li', null, el('button', { class: 'link', text: `${f.path}${range(s)}`, onclick: () => openFile(f.path) }), el('span', { class: 'hit', text: `${s.sig} — ${s.tags.join(', ')}` })));
+      for (const p of f.pairs) leadRows.push(fileLink(f.path, p));
+      for (const n of f.notInSchema) leadRows.push(fileLink(f.path, `${n} not in schema`));
+    }
+    const purpose = purposes.get(d.path);
+    put(
+      el('h2', { text: d.path ? `${d.path}/` : meta.name }),
+      purpose ? el('p', { text: purpose }) : null,
+      el('p', { class: 'muted', text: `${plural(d.all.length, 'file')} · ${fmt(d.lines)} lines · ${plural(d.all.reduce((s, f) => s + f.symbols.length, 0), 'function')}` }),
+      d === top && meta.systemMap ? el('p', { text: `How the parts interact (written, not generated): ${meta.systemMap}` }) : null,
+      ...section('Used from outside this folder', deps(usedFrom)),
+      ...section('Uses outside this folder', deps(usesOut)),
+      ...section(`Leads (${leadRows.length}) — check before deleting`, leadRows.slice(0, 150)),
+      el('h3', { text: 'Reading the map' }),
+      el('ul', { class: 'legend' },
+        el('li', { text: 'Size = lines of code. Click a folder to open it, a file to see its functions.' }),
+        el('li', null, el('span', { class: 'sw', style: 'background:var(--file)' }), 'Source file'),
+        el('li', null, el('span', { class: 'sw', style: 'background:var(--test)' }), 'Test file'),
+        el('li', null, el('span', { class: 'sw', style: 'background:var(--unused)' }), 'Has unused or tests-only functions'),
+        el('li', null, el('span', { class: 'sw', style: 'background:var(--dead)' }), 'Nothing loads this file'),
+        el('li', null, el('span', { class: 'sw', style: 'background:var(--pair)' }), 'Half-pair or table missing from the schema'),
+        el('li', null, el('span', { class: 'sw', style: 'background:var(--keep)' }), 'Kept until a condition (REMOVE WHEN)'),
+        el('li', null, el('span', { class: 'sw untested' }), 'Striped: no tests cover it'),
+        el('li', null, el('span', { class: 'sw', style: 'border:2px solid var(--text)' }), `Thick border: over ${fmt(meta.large)} lines`),
+        el('li', { text: 'With a file selected: pink dashes use it, green dashes are what it uses.' })),
+      el('p', { class: 'muted', text: `Generated by ${meta.command} generate with the MAP.md files, at each merge into the main branch. Agents read MAP.md; this page is for people.` }),
+    );
+  }
+
+  function drawSide() {
+    side.textContent = '';
+    if (selected) drawFile(selected);
+    else if (filtering()) drawResults();
+    else drawFolder(here);
+  }
+
+  function drawChips() {
+    const c = $('chips');
+    c.textContent = '';
+    for (const [k, fill, label] of KINDS) {
+      const n = [...files.values()].filter((f) => f.kinds.has(k)).length;
+      if (!n) continue;
+      const style = fill === 'untested' ? '' : fill === 'large' ? 'border:2px solid var(--text)' : `background:var(--${fill})`;
+      c.append(el('button', { class: 'chip', 'aria-pressed': String(active.has(k)), onclick: () => { active.has(k) ? active.delete(k) : active.add(k); update(); } },
+        el('span', { class: `sw ${fill === 'untested' ? 'untested' : ''}`, style }), `${label} ${fmt(n)}`));
+    }
+  }
+
+  function update() { computeHits(); drawChips(); drawCrumbs(); drawMap(); drawSide(); }
+
+  // ---- navigation: #d=folder&f=file
+  function nav({ dir, file }) {
+    const h = new URLSearchParams();
+    if (dir) h.set('d', dir);
+    if (file) h.set('f', file);
+    const s = h.toString();
+    if (location.hash.slice(1) === s) apply(); else location.hash = s;
+  }
+  function apply() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    here = findDir(h.get('d') || '');
+    selected = files.get(h.get('f')) || null;
+    update();
+  }
+  window.addEventListener('hashchange', apply);
+
+  let timer;
+  const toastEl = $('toast');
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('on'); clearTimeout(timer); timer = setTimeout(() => toastEl.classList.remove('on'), 1800); }
+  function copy(text) {
+    const done = () => toast(`Copied ${text}`);
+    try { navigator.clipboard.writeText(text).then(done, () => toast(text)); } catch { toast(text); }
+  }
+
+  const q = $('q');
+  q.addEventListener('input', () => { query = q.value.trim(); if (selected) nav({ dir: here.path }); else update(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+    else if (e.key === 'Escape') { if (q.value) { q.value = ''; query = ''; update(); } else if (selected) nav({ dir: here.path }); }
+  });
+  $('stats').textContent = `${plural(files.size, 'file')} · ${fmt(root.lines)} lines`;
+  new ResizeObserver(() => drawMap()).observe(mapEl);
+  apply();
+})();
+</script>
+</body>
+</html>

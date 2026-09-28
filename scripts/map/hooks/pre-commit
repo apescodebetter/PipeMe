@@ -1,0 +1,10 @@
+#!/bin/sh
+# MODULE: git pre-commit hook — MAP files hold only what `generate` writes; a commit that changes one any other way is refused.
+# Install: cp tools/map/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# (With husky or core.hooksPath, add these lines to the pre-commit hook that's already there.)
+root=$(git rev-parse --show-toplevel) || exit 0
+map="$root/tools/map/map.mjs"
+[ -f "$map" ] && command -v node >/dev/null 2>&1 || exit 0
+# fast path: most commits touch no MAP file, so node never starts
+git -C "$root" diff --cached --name-only -- ':(glob)**/MAP*.md' ':(glob)**/MAP.html' | grep -q . || exit 0
+exec node "$map" check --staged --root "$root"

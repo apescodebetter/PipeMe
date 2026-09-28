@@ -12,7 +12,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     *) continue ;;
   esac
   # check reads the working tree, so a regenerated-but-uncommitted map would pass while the pushed one is stale
-  if [ -n "$(git -C "$root" status --porcelain -- ':(glob)**/MAP*.md')" ]; then
+  if [ -n "$(git -C "$root" status --porcelain -- ':(glob)**/MAP*.md' ':(glob)**/MAP.html')" ]; then
     echo "pre-push: MAP files have uncommitted changes — commit them, then push again." >&2
     exit 1
   fi

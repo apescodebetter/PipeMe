@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// MODULE: command line for the code map — generate, check, report, docs, and the two Claude Code hooks.
-//   generate [--out DIR]   write MAP.md files (into the repo, or into DIR to preview)
-//   check                  exit 1 if the MAP files on disk don't match the code (pre-push on master)
+// MODULE: command line for the code map — generate, check, report, docs, and the Claude Code hooks.
+//   generate [--out DIR]   write the MAP files and MAP.html (into the repo, or into DIR to preview)
+//   check [--staged]       exit 1 unless every MAP file on disk (or staged for commit) is exactly what generate writes
 //   report                 dead-code candidates, grouped by tag
 //   docs                   names in the docs (`like this`) that no longer exist in the code
 //   hook-read              PreToolUse(Read): send whole-file reads of large files to the map first
+//   hook-guard             PreToolUse(Edit|Write|MultiEdit): refuse any hand edit to a MAP file
 //   hook-edit              PostToolUse(Edit|Write|MultiEdit): say what an edit left unused or dangling
 // Shared flags: --root DIR (default: the git repo around the current folder), --config FILE (default: map.config.json)
 import fs from 'node:fs';
@@ -14,15 +15,19 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
   repoRoot, loadConfig, loadTs, listFiles, parseFiles, readCache, writeCache, loadTsconfigs,
-  makeResolver, readSchema, textReferences, SOURCE_RE, matchAny,
+  makeResolver, readSchema, textReferences, SOURCE_RE, MAP_FILE_RE, matchAny,
 } from './lib/analyze.mjs';
 import { parseSource } from './lib/parse.mjs';
 import { buildGraph } from './lib/graph.mjs';
 import { renderMaps, outlinePath } from './lib/render.mjs';
+import { renderView } from './lib/view.mjs';
 import { staleNames } from './lib/docs.mjs';
 
 const TOOL_DIR = path.dirname(fileURLToPath(import.meta.url));
-const MAP_FILE_RE = /(^|\/)MAP(\.[^/]+)?\.md$/;
+// only files this tool wrote: a MAP*.md starting with "# MAP", or MAP.html carrying the marker comment on its second line
+const isGenerated = (text) => text.startsWith('# MAP') || /^<!DOCTYPE html>\r?\n<!-- MAP /.test(text);
+const HARD_RULE = 'MAP files hold only what `generate` writes: no notes, TODOs or explanations. '
+  + 'To change what a map says, change the code it describes or the generator (tools/map/), then run generate.';
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -30,6 +35,7 @@ const flag = (name) => { const i = args.indexOf(name); return i === -1 ? null : 
 
 try {
   if (cmd === 'hook-read') await hookRead();
+  else if (cmd === 'hook-guard') await hookGuard();
   else if (cmd === 'hook-edit') await hookEdit();
   else if (cmd === 'generate') generate();
   else if (cmd === 'check') check();
@@ -72,28 +78,36 @@ function graphFor(facts, { root, cfg, ts, list }) {
 function maps(env, graph) {
   const inside = !path.relative(env.root, TOOL_DIR).startsWith('..');
   const command = env.cfg.command || (inside ? `node ${path.relative(env.root, path.join(TOOL_DIR, 'map.mjs')).split(path.sep).join('/')}` : 'node tools/map/map.mjs');
-  return renderMaps(graph, {
+  const ctx = {
     cfg: env.cfg,
     docs: new Set(env.list.docs),
     readDoc: (p) => fs.readFileSync(path.join(env.root, p), 'utf8'),
     repoName: env.cfg.name || path.basename(env.root),
     command,
-  });
+  };
+  const out = renderMaps(graph, ctx);
+  out.set('MAP.html', renderView(graph, ctx));
+  return out;
 }
 
-function existingMaps(root, base = root) {
-  const found = [];
+// MAP-named files under root: `generated` carry this tool's marker, `stray` don't (someone wrote them by hand).
+// Hidden folders and nested checkouts (.claude/worktrees/…) belong to other branches: never read, never cleaned.
+function scanMaps(root) {
+  const generated = [];
+  const stray = [];
   const walk = (dir) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (e.name === 'node_modules' || e.name === '.git') continue;
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
       const p = path.join(dir, e.name);
-      if (e.isDirectory()) walk(p);
-      else if (MAP_FILE_RE.test(e.name) && fs.readFileSync(p, 'utf8').startsWith('# MAP')) found.push(path.relative(base, p).split(path.sep).join('/'));
+      const rel = path.relative(root, p).split(path.sep).join('/');
+      if (e.isDirectory()) { if (!fs.existsSync(path.join(p, '.git'))) walk(p); }
+      else if (MAP_FILE_RE.test(e.name)) (isGenerated(fs.readFileSync(p, 'utf8')) ? generated : stray).push(rel);
     }
   };
   if (fs.existsSync(root)) walk(root);
-  return found;
+  return { generated, stray };
 }
+function existingMaps(root) { return scanMaps(root).generated; }
 
 // ---------------------------------------------------------------- commands
 function generate() {
@@ -108,29 +122,56 @@ function generate() {
     const p = path.join(target, rel);
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.writeFileSync(p, text);
-    bytes += Buffer.byteLength(text);
+    if (rel.endsWith('.md')) bytes += Buffer.byteLength(text);
   }
-  console.log(`map: ${out.size} files, ~${Math.round(bytes / 4 / 1000)}k tokens total → ${target === env.root ? 'repo' : target}`);
+  console.log(`map: ${out.size - 1} MAP files, ~${Math.round(bytes / 4 / 1000)}k tokens for agents → ${target === env.root ? 'repo' : target}`);
+  console.log(`view: ${path.join(target, 'MAP.html')} (${Math.round(Buffer.byteLength(out.get('MAP.html')) / 1024)} KB) — open it in a browser`);
   console.log(`tags: ${Object.entries(graph.summary).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ') || 'none'}`);
 }
 
 function check() {
   const env = setup();
+  if (args.includes('--staged')) return checkStaged(env);
   const { graph } = analyze(env);
   const out = maps(env, graph);
-  const onDisk = new Set(existingMaps(env.root));
+  const { generated, stray } = scanMaps(env.root);
+  const onDisk = new Set(generated);
   const problems = [];
   for (const [rel, text] of out) {
     if (!onDisk.has(rel)) problems.push(`missing  ${rel}`);
     else if (fs.readFileSync(path.join(env.root, rel), 'utf8').replace(/\r\n/g, '\n') !== text) problems.push(`stale    ${rel}`);
   }
   for (const rel of onDisk) if (!out.has(rel)) problems.push(`extra    ${rel}`);
+  for (const rel of stray) problems.push(`not generated  ${rel} — MAP file names belong to the map; rename it`);
   if (problems.length) {
     console.error(`map: ${problems.length} map file(s) don't match the code:\n  ${problems.slice(0, 20).join('\n  ')}`);
-    console.error(`Run: ${env.cfg.command || 'node tools/map/map.mjs'} generate — then commit the MAP files.`);
+    console.error(`${HARD_RULE}\nRun: ${env.cfg.command || 'node tools/map/map.mjs'} generate — then commit the MAP files.`);
     process.exit(1);
   }
   console.log('map: up to date');
+}
+
+// pre-commit: every staged MAP file must be byte-for-byte what generate writes — however it was edited (tool, shell, editor, person)
+function checkStaged(env) {
+  const raw = execFileSync('git', ['diff', '--cached', '--name-status', '--no-renames', '-z'], { cwd: env.root, encoding: 'utf8' });
+  const parts = raw.split('\0').filter(Boolean);
+  const staged = [];
+  for (let i = 0; i + 1 < parts.length; i += 2) if (MAP_FILE_RE.test(parts[i + 1])) staged.push({ status: parts[i], rel: parts[i + 1] });
+  if (!staged.length) return;
+  const { graph } = analyze(env);
+  const out = maps(env, graph);
+  const problems = [];
+  for (const { status, rel } of staged) {
+    if (status === 'D') { if (out.has(rel)) problems.push(`deleted        ${rel} — generate still writes it`); continue; }
+    const text = execFileSync('git', ['show', `:${rel}`], { cwd: env.root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 }).replace(/\r\n/g, '\n');
+    if (!out.has(rel)) problems.push(`not generated  ${rel} — MAP file names belong to the map`);
+    else if (text !== out.get(rel)) problems.push(`hand-edited    ${rel} — or generated from older code`);
+  }
+  if (problems.length) {
+    console.error(`map: commit refused — ${problems.length} staged MAP file(s) aren't generator output:\n  ${problems.join('\n  ')}`);
+    console.error(`${HARD_RULE}\nUndo: git restore --staged <file> && git restore <file>. Or regenerate: ${env.cfg.command || 'node tools/map/map.mjs'} generate, then stage the result.`);
+    process.exit(1);
+  }
 }
 
 function report() {
@@ -210,6 +251,17 @@ async function hookRead() {
     '  If you really need the whole file, repeat this exact Read — it will be allowed.',
   ].filter(Boolean).join('\n');
   process.stderr.write(msg + '\n');
+  process.exit(2);
+}
+
+// Refuses Edit/Write/MultiEdit on any MAP-named file: maps change only by `generate`, never by hand
+async function hookGuard() {
+  const input = await stdinJson();
+  const ti = input.tool_input || {};
+  const hit = [ti.file_path, ...((ti.file_edits || []).map((e) => e.file_path))].filter(Boolean).find((p) => MAP_FILE_RE.test(path.basename(p)));
+  if (!hit) return;
+  process.stderr.write(`${path.basename(hit)} is generated by the code map — this edit is refused.\n${HARD_RULE}\n`
+    + 'The map is regenerated when a branch merges into the main branch.\n');
   process.exit(2);
 }
 

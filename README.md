@@ -36,7 +36,7 @@ Docs fall into two cost classes. `CLAUDE.md` and its nested files are **always l
 | `/pipeme handoff` | Condense the doc suite into an onboarding brief |
 | `/pipeme claude.md` | Generate or rebuild `CLAUDE.md` + nested files (asks before overwriting; preserves hand-tuned structure) |
 | `/pipeme next` | Post-completion planning — close the current cycle, interview for the next one, update all docs in place |
-| `/pipeme map` | Install a generated code map in a JS/TS repo: per-folder `MAP.md` with line ranges, usage and dead-code tags, a Read hook for large files, an edit hook, a pre-push freshness check |
+| `/pipeme map` | Install a generated code map in a JS/TS repo: per-folder `MAP.md` with line ranges, usage and dead-code tags, `MAP.html` to browse the whole map, a Read hook for large files, an edit hook, a pre-push freshness check |
 
 ## Install
 
@@ -55,14 +55,28 @@ pipeme/
 │   └── map.md                     # code map: formats, tags, hooks, install text
 └── scripts/map/                   # the code map generator, copied into a project by /pipeme map
     ├── map.mjs                    # generate · check · report · docs · hook-read · hook-edit
-    ├── lib/                       # parse (TypeScript parser) → graph → render, docs check
+    ├── lib/                       # parse (TypeScript parser) → graph → render + MAP.html viewer, docs check
     ├── hooks/pre-push             # blocks a push to main/master with a stale map
     └── test/run.mjs               # end-to-end test on a throwaway repo
 ```
 
 ## Version
 
-Current: **1.13**
+Current: **1.14**
+
+**1.14** — `MAP.html`: the whole code map as one page for people. `generate` writes it at the root in the same run as the MAP files, from the same graph, and `check` and pre-push cover it, so it never drifts from them. Open it in a browser; there's no command to run. It shows a treemap of every folder and file sized by lines, colored by dead-code tag, striped where no test covers it. Click a folder to open it, or a file to see its functions with line ranges (a click copies `path:start-end` for an agent) and who uses it. Search takes the same task words agents grep for. It's self-contained, works offline, and has light and dark themes. Agents keep reading `MAP.md`; the page's data is one short record per line, so a repo-wide grep that hits it stays small.
+
+Hard rule: MAP files hold only generator output. A structural change goes into the generator; nothing is written into a map by hand. Four guardrails enforce it:
+- the "Finding code" rule in the root `CLAUDE.md`
+- a PreToolUse guard that refuses any agent edit to a MAP file
+- a pre-commit hook that refuses any staged MAP file that isn't byte-for-byte generator output, however it was written
+- the existing pre-push check
+
+The map and the `CLAUDE.md` routing table split cleanly. The table points to docs, which say what's decided; the map points to code, as built. "Finding code" is the map's only entry point, so there's no routing row for it, and routing triggers name the decision a doc holds, never code to find.
+
+`generate` no longer walks into hidden folders or nested checkouts, so it can't delete MAP files inside orchestration worktrees. The skill description is shorter.
+
+**1.13.1** — The map leaves its own install folder (`tools/map/`) out without a config line; before, it mapped its own scripts and flagged `map.mjs` as an unused file.
 
 **1.13** — `/pipeme map`: a generated, committed code map for JS/TS repos, so agents grep to the exact line range instead of reading whole files. It has three layers: the architecture diagram as roots (written), per-folder `MAP.md` files as branches (generated), and function bodies as leaves (never stored). Each symbol line carries its range, who uses it, and dead-code tags (`unused`, `tests-only`, `half-pair`, `not in schema`, `keep until`). A Read hook sends whole-file reads of large files to the map first; repeating the Read allows it. An edit hook prints what an edit left unused or dangling. The map regenerates only when a branch merges into the main branch, and a pre-push check blocks a stale one. A `docs` command lists names in `CLAUDE.md`/`AGENTS.md`/`TECH_SPEC.md` that no longer exist in the code. Update Mode's drift check and Next Cycle's audit use it.
 

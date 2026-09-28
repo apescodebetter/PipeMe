@@ -197,7 +197,7 @@ function parentMap(d, mapped) {
   return p;
 }
 
-function folderPurpose(d, docs, readDoc) {
+export function folderPurpose(d, docs, readDoc) {
   for (const name of ['CLAUDE.md', 'README.md']) {
     const p = `${slash(d)}${name}`;
     if (!docs.has(p)) continue;

@@ -122,8 +122,24 @@ test('file nothing loads is unused-file', () => assert.match(maps, /ext\/orphan\
 test('script named in package.json is loaded', () => assert.doesNotMatch(maps, /scripts\/seed\.js[^\n]*\n[^\n]*unused-file/));
 test('root map has find instructions and tag totals', () => { const r = read('MAP.md'); assert.match(r, /grep -rn --include='MAP\*\.md'/); assert.match(r, /Tags: unused \d/); });
 
+// ---------------------------------------------------------------- MAP.html
+const html = read('MAP.html');
+test('MAP.html is written with the maps', () => {
+  assert.match(html, /^<!DOCTYPE html>\n<!-- MAP /);
+  const data = JSON.parse(html.match(/<script type="application\/json" id="map-data">([\s\S]*?)<\/script>/)[1]);
+  assert.ok(data.some((r) => r[0] === 'S' && r[1] === 'getPlan'), 'a row for getPlan');
+  new Function(html.match(/<script>([\s\S]*?)<\/script>/)[1]); // the viewer compiles
+});
+test('MAP.html never counts as a reference', () => assert.match(run(['report']).stdout, /## unused-file \(\d+\)\n(?: {2}.*\n)* {2}ext\/orphan\.js/));
+
 // ---------------------------------------------------------------- check, report, docs
 test('check passes right after generate', () => assert.equal(run(['check']).status, 0));
+test('check notices a stale MAP.html', () => {
+  fs.writeFileSync(path.join(dir, 'MAP.html'), html.replace('"getPlan"', '"getPlanX"'));
+  const r = run(['check']);
+  fs.writeFileSync(path.join(dir, 'MAP.html'), html);
+  assert.equal(r.status, 1); assert.match(r.stderr, /stale\s+MAP\.html/);
+});
 w('src/billing/refund.ts', 'export function refund(id: string) { return id; }\nexport function refundAll() { return 0; }\n');
 test('check fails when code changed', () => { const r = run(['check']); assert.equal(r.status, 1); assert.match(r.stderr, /stale\s+src\/billing\/MAP\.md|stale\s+src\/MAP\.md|stale\s+MAP\.md/); });
 test('report lists candidates by tag', () => { const r = run(['report']).stdout; assert.match(r, /## unused/); assert.match(r, /refundAll/); });
@@ -166,7 +182,39 @@ test('hook-edit says when a removed function is still used', () => {
   assert.match(ctx, /removed refund from src\/billing\/refund\.ts, but .*src\/app\/api\/refund\/route\.ts/);
 });
 test('hook-edit stays quiet when nothing changed', () => assert.equal(editHook('src/billing/refund.ts').stdout, ''));
-test('hooks never fail loudly on bad input', () => { assert.equal(run(['hook-edit'], 'not json').status, 0); assert.equal(run(['hook-read'], '{}').status, 0); });
+test('hooks never fail loudly on bad input', () => { for (const h of ['hook-edit', 'hook-read', 'hook-guard']) assert.equal(run([h], 'not json').status, 0, h); assert.equal(run(['hook-read'], '{}').status, 0); });
+
+// ---------------------------------------------------------------- guardrails: MAP files hold only generator output
+const guard = (file) => run(['hook-guard'], JSON.stringify({ session_id: 'g', cwd: dir, tool_name: 'Edit', tool_input: { file_path: path.join(dir, file) } }));
+test('hook-guard refuses an edit to a MAP file', () => { const r = guard('src/MAP.md'); assert.equal(r.status, 2); assert.match(r.stderr, /refused[\s\S]*only what `generate` writes/); });
+test('hook-guard refuses MAP.html and a new MAP-named file', () => { assert.equal(guard('MAP.html').status, 2); assert.equal(guard('docs/MAP.notes.md').status, 2); });
+test('hook-guard lets every other file through', () => { assert.equal(guard('src/billing/plan.ts').status, 0); assert.equal(guard('docs/map.md').status, 0); });
+run(['generate']);
+execFileSync('git', ['add', '-A'], { cwd: dir });
+const preCommit = () => spawnSync('sh', [path.join(dir, 'tools/map/hooks/pre-commit')], { cwd: dir, encoding: 'utf8' });
+test('pre-commit accepts freshly generated MAP files', () => { const r = preCommit(); assert.equal(r.status, 0, r.stderr); });
+fs.appendFileSync(path.join(dir, 'src/MAP.md'), '\nTODO: refactor this folder later\n');
+w('docs/MAP.notes.md', '# notes about the map\n');
+execFileSync('git', ['add', '-A'], { cwd: dir });
+test('pre-commit refuses a hand edit and a hand-made MAP file', () => {
+  const r = preCommit();
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /hand-edited\s+src\/MAP\.md/); assert.match(r.stderr, /not generated\s+docs\/MAP\.notes\.md/);
+});
+test('check flags a MAP-named file the generator did not write', () => assert.match(run(['check']).stderr, /not generated\s+docs\/MAP\.notes\.md/));
+test('generate leaves a stray MAP-named file for a person to rename', () => { run(['generate']); assert.ok(fs.existsSync(path.join(dir, 'docs/MAP.notes.md'))); });
+execFileSync('git', ['reset', '-q'], { cwd: dir });
+fs.rmSync(path.join(dir, 'docs/MAP.notes.md'));
+w('.worktrees/other/MAP.md', '# MAP — another branch checked out here\n');
+test('generate never touches MAP files in hidden folders (worktrees)', () => { run(['generate']); assert.ok(fs.existsSync(path.join(dir, '.worktrees/other/MAP.md'))); });
+test('an installed copy leaves its own folder out of the map', () => {
+  w('.gitignore', 'dist/\n');
+  const out = path.join(dir, '.preview');
+  const r = spawnSync(process.execPath, [path.join(dir, 'tools/map/map.mjs'), 'generate', '--out', out], { cwd: dir, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const text = fs.readdirSync(out, { recursive: true }).filter((p) => p.endsWith('.md')).map((p) => fs.readFileSync(path.join(out, p), 'utf8')).join('\n');
+  assert.match(text, /src\/billing/); assert.doesNotMatch(text, /^\s*tools\/map\//m);
+});
 
 console.log(`\n${passed} passed${process.exitCode ? ', some FAILED' : ''} · fixture: ${dir}`);
 if (!process.exitCode) fs.rmSync(dir, { recursive: true, force: true });

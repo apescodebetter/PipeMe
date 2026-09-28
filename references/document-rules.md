@@ -222,7 +222,7 @@ At cycle close: regenerate the table alongside `CLAUDE.md`'s, adding or removing
 - {bullets — behavioral rules, not architecture}
 
 ## Finding code
-{Only when `/pipeme map` is installed — the four bullets from `references/map.md`, verbatim.}
+{Only when `/pipeme map` is installed — the bullets from `references/map.md`, verbatim.}
 
 ## Git
 {Branch · commit/push policy. Two lines max.}
@@ -235,7 +235,7 @@ At cycle close: regenerate the table alongside `CLAUDE.md`'s, adding or removing
 {One line: what regenerates this file.}
 ```
 
-**The law, applied:** a Golden constraint is one line, present tense, no date, no cycle tag — the shape is `{rule}`, not `{rule} + {when it was added}`. Rejected, real examples: `As of 2026-08-22, the Supabase MCP is connected` (a status report, not a constraint — the shape has no date field), `⭐ Cycle 3: RESEND_API_KEY env var required` (the star and cycle tag aren't part of any field in the constraint-list shape; the constraint is just `RESEND_API_KEY env var required for expiry-reminder emails`). Budget: 600–1,000 tokens, measured, not estimated.
+**The law, applied:** a Golden constraint is one line, present tense, no date, no cycle tag — the shape is `{rule}`, not `{rule} + {when it was added}`. Rejected, real examples: `As of 2026-08-22, the Supabase MCP is connected` (a status report, not a constraint — the shape has no date field), `⭐ Cycle 3: RESEND_API_KEY env var required` (the star and cycle tag aren't part of any field in the constraint-list shape; the constraint is just `RESEND_API_KEY env var required for expiry-reminder emails`). A routing trigger names the decision a doc holds, never code to find: `Architecture decisions, API contracts, testing gates`, not `Backend or architecture code` — code locations come from the map, which has no row here. Budget: 600–1,000 tokens, measured, not estimated.
 
 ---
 
@@ -292,6 +292,16 @@ Full docs: {pointer list}
 ```
 
 **The law, applied:** every section is a bulleted compression of another file, not new prose — this file originates nothing. If a sentence here isn't traceable to a bullet in `PRD.md`, a decision in `TECH_SPEC.md`, a constraint in `CLAUDE.md`, or a commit in `git log`, it doesn't have a shape to fit. Roughly one screen; longer means it's stopped being a brief.
+
+---
+
+## `MAP.md`, `{dir}/MAP.md`, `MAP.<file>.md`, `MAP.html` (generated, via `/pipeme map`)
+
+**Purpose:** the code map — generator output, nothing else.
+
+**Shape:** exactly what `tools/map/` writes. There is no hand-written shape.
+
+**The law, applied:** nothing is written into a MAP file by hand — not a note, a TODO, a warning, a pointer, a "why". The only change allowed is to the map's structure, made in the generator and applied by `generate`. `/pipeme clean` and `/pipeme update` never edit a MAP file; a map that fails `check` is regenerated, not cleaned. Guardrails and the hooks that enforce this: `references/map.md` → Hard rule.
 
 ---
 

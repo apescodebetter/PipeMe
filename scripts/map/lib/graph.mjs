@@ -9,7 +9,7 @@ const FRAMEWORK_NAMES = new Set(['default', 'GET', 'POST', 'PUT', 'PATCH', 'DELE
   'generateMetadata', 'generateStaticParams', 'generateViewport', 'viewport', 'dynamic', 'dynamicParams', 'revalidate',
   'runtime', 'fetchCache', 'preferredRegion', 'maxDuration', 'config', 'middleware', 'proxy', 'register',
   'onRequestError', 'onRouterTransitionStart']);
-const MESSAGE_LIKE = /^[a-z]+[A-Z]\w*$|^[A-Z][A-Z0-9_]{2,}$|^[\w-]+:[\w:-]+$/;
+export const MESSAGE_LIKE = /^[a-z]+[A-Z]\w*$|^[A-Z][A-Z0-9_]{2,}$|^[\w-]+:[\w:-]+$/;
 const uniqList = (a) => [...new Set(a)];
 
 export function buildGraph(files, ctx) {

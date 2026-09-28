@@ -5,9 +5,12 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { parseSource } from './parse.mjs';
 
 export const SOURCE_RE = /\.(js|jsx|ts|tsx|mjs|cjs|mts|cts)$/;
+// files this tool generates: they describe the code, so they never count as references to it
+export const MAP_FILE_RE = /(^|\/)MAP(\.[^/]+)?\.(md|html)$/;
 const TEXT_REF_RE = /\.(json|html?|ya?ml|toml|sh|ps1|bat|webmanifest)$/;
 const LOCKFILES = /(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?)$/;
 const CACHE_VERSION = 5;
@@ -44,6 +47,9 @@ export function loadConfig(root, configPath) {
   if (fs.existsSync(file)) user = JSON.parse(fs.readFileSync(file, 'utf8'));
   const cfg = { ...DEFAULTS, ...user };
   for (const k of ['exclude', 'tests']) cfg[k] = [...DEFAULTS[k], ...(user[k] || [])];
+  // the map describes the project, not itself: skip the folder this tool is installed in
+  const toolDir = path.relative(root, path.dirname(path.dirname(fileURLToPath(import.meta.url))));
+  if (toolDir && !toolDir.startsWith('..') && !path.isAbsolute(toolDir)) cfg.exclude.push(`${toolDir.split(path.sep).join('/')}/**`);
   cfg._exclude = cfg.exclude.map(globToRegex);
   cfg._include = (cfg.include || []).map(globToRegex);
   cfg._tests = cfg.tests.map(globToRegex);
@@ -88,9 +94,9 @@ export function listFiles(root, cfg) {
     && !(cfg.skipHidden && p.split('/').some((seg) => seg.startsWith('.')))
     && (cfg._include.length === 0 || matchAny(cfg._include, p));
   const sources = all.filter((p) => SOURCE_RE.test(p) && keep(p)).sort();
-  const texts = all.filter((p) => TEXT_REF_RE.test(p) && !LOCKFILES.test(p) && keep(p)).sort();
+  const texts = all.filter((p) => TEXT_REF_RE.test(p) && !LOCKFILES.test(p) && !MAP_FILE_RE.test(p) && keep(p)).sort();
   const schema = all.filter((p) => matchAny(cfg._schema, p) && keep(p)).sort();
-  const docs = all.filter((p) => p.endsWith('.md') && !/(^|\/)MAP(\.[^/]+)?\.md$/.test(p)).sort();
+  const docs = all.filter((p) => p.endsWith('.md') && !MAP_FILE_RE.test(p)).sort();
   return { sources, texts, schema, docs, all };
 }
 

@@ -1,7 +1,7 @@
 ---
 name: pipeme
-version: 1.13
-description: PipeMe — a virtual software company that turns an app/SaaS idea into AI-agent-ready development documentation through the /pipeme command interface. Produces a context-budgeted documentation suite from scratch or from the current project (PRD, technical spec, task-decomposed roadmap, layered CLAUDE.md bootstrap, AGENTS.md cross-reference map, Mermaid diagrams), plus an optional generated code map for JS/TS repos. Does not produce changelogs or brand/design-system docs. Triggers only on /pipeme commands or explicit mentions of PipeMe.
+version: 1.14
+description: PipeMe — a virtual product team that turns an app idea or an existing project into context-budgeted, AI-agent-ready docs (PRD, tech spec, roadmap, layered CLAUDE.md, AGENTS.md, Mermaid diagrams) and a generated code map for JS/TS repos. Triggers only on /pipeme commands or explicit mentions of PipeMe.
 ---
 
 # PipeMe — Virtual Product Team & AI-Ready Documentation Generator
@@ -70,7 +70,7 @@ PipeMe operates ONLY through commands. Route as follows:
 | `/pipeme handoff` | Handoff Mode (below): condense the current doc suite + change log into a single onboarding brief. |
 | `/pipeme claude.md` | Generate `CLAUDE.md` if it doesn't exist yet (e.g. project predates v1.2, or the file was deleted). If it already exists, ask before overwriting. |
 | `/pipeme next` | Next Cycle Mode (below): post-completion planning — when all phases are done, runs a new interview to plan the next development cycle, building on existing docs. |
-| `/pipeme map` | Map Mode (below): install or upgrade the generated code map in the current JS/TS repo — per-folder `MAP.md` files, two Claude Code hooks, a pre-push check. |
+| `/pipeme map` | Map Mode (below): install or upgrade the generated code map in the current JS/TS repo — per-folder `MAP.md` files, `MAP.html` to browse it, two Claude Code hooks, a pre-push check. |
 | Anything else (`/pipeme xyz`) | Show the help output. Never guess or interpret unrecognized subcommands. |
 
 `/pipeme design` was removed in v1.5 — PipeMe no longer generates brand or design-system docs. If asked for it, say it's out of scope and don't improvise a substitute.
@@ -206,13 +206,13 @@ The principle: an agent working on Phase 7 should never pay tokens for Phase 1 t
 
 ### Map Mode (`/pipeme map`)
 
-Installs a generated code map so agents — a single session or an orchestrated fleet — find code by grepping a small index instead of reading whole files, see what an edit breaks, and get dead-code leads. Formats, hook config, and the `CLAUDE.md` text are in `references/map.md`; the scripts ship in this skill's `scripts/map/`.
+Installs a generated code map so agents — a single session or an orchestrated fleet — find code by grepping a small index instead of reading whole files, see what an edit breaks, and get dead-code leads. The same run writes `MAP.html`, the whole map as one page the user opens in a browser. Formats, hook config, and the `CLAUDE.md` text are in `references/map.md`; the scripts ship in this skill's `scripts/map/`.
 
 1. **Preconditions.** Git repo, Node 18+, `typescript` in `node_modules` at the root or one folder down. Not JS/TS → say the map doesn't support it and stop. No `typescript` → say so and offer `npm i -D typescript`; don't install it unasked.
 2. **Preview, write nothing.** From the project root, run `node {this skill}/scripts/map/map.mjs generate --out {a temp dir}`, then `report` and `docs`. Show: number of map files and their total tokens against the source size, the root map, the dead-code leads by tag, stale doc names. Noise the config can remove (a script run by hand showing `[unused-file]`, a test folder not matched, migrations elsewhere) → propose `map.config.json` keys and rerun. The leads are for the user to decide on — Map Mode deletes nothing.
-3. **Confirm, then install.** List every file written before writing: `tools/map/` (the scripts, without `test/`), `map.config.json` (only non-default keys), the hooks merged into `.claude/settings.json`, the pre-push hook, the "Finding code" section in the root `CLAUDE.md` plus its routing row for the root `MAP.md` with measured cost, and the generated MAP files. Set `systemMap` to the architecture diagram in `DIAGRAMS.md` when one exists. Follow the project's git policy — a branch, and commit only when asked.
+3. **Confirm, then install.** List every file written before writing: `tools/map/` (the scripts, without `test/`), `map.config.json` (only non-default keys), the hooks merged into `.claude/settings.json` (read, guard, edit), the pre-commit and pre-push hooks, the "Finding code" section in the root `CLAUDE.md` (the map's only entry point — no routing-table row), and the generated MAP files with `MAP.html`. If a routing trigger sends agents to a doc to find code (`Backend code`, `where X lives`), propose rewording it to the decision the doc holds. Set `systemMap` to the architecture diagram in `DIAGRAMS.md` when one exists. Follow the project's git policy — a branch, and commit only when asked.
 4. **Upgrade.** `tools/map/` already present → replace the scripts, keep `map.config.json`, run `check`; if it reports stale maps, show which and regenerate on the main branch at the next merge.
-5. **Report.** Files written, map size, always-on cost added to `CLAUDE.md`, the dead-code leads, stale doc names, and the rule that keeps the map fresh: regenerate when a branch merges into the main branch, never on a branch.
+5. **Report.** Files written, map size, always-on cost added to `CLAUDE.md`, the dead-code leads, stale doc names, and the rule that keeps the map fresh: regenerate when a branch merges into the main branch, never on a branch. Point the user to `MAP.html` at the root — open it in a browser to see the whole map. State the hard rule: MAP files hold only generator output, and four guardrails enforce it (`references/map.md` → Hard rule).
 
 ### Step 1 — The Interview
 
@@ -262,6 +262,7 @@ Set "Current Phase" to Phase 1 (or Phase 0 if generated via Analyze Mode). **Mea
 | `CLAUDE.md` | Always-loaded bootstrap: constraints, phase, commands, DoD, git, cost-labeled routing table. Budget ~600–1,000 tokens | ✅ | ✅ |
 | `{dir}/CLAUDE.md` | Per-surface conventions, loaded only when working in that directory. One per major code surface, 200–500 tokens each | ✅ | ✅ |
 | `MAP.md`, `{dir}/MAP.md` | Generated code map — files, functions with line ranges, usage, tests, dead-code tags. Only via `/pipeme map`; never hand-edited, never purity-linted | on demand | on demand |
+| `MAP.html` | The same map as one page for people: treemap, search, dead-code leads. Generated with the MAP files; agents don't read it | on demand | on demand |
 
 **Not produced:** `CHANGELOG.md` (git history is the record of what changed; code comments hold why a rule exists), `BRAND.md` / `DESIGN_SYSTEM.md` (visual design is out of scope), and — as of v1.7 — no standalone `TEST_PLAN.md` (testing lives in `TECH_SPEC.md §Testing` and in each task's verification methods). Don't create these, and don't recreate one you find deliberately absent.
 
