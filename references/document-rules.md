@@ -221,6 +221,9 @@ At cycle close: regenerate the table alongside `CLAUDE.md`'s, adding or removing
 ## Working rules
 - {bullets — behavioral rules, not architecture}
 
+## Finding code
+{Only when `/pipeme map` is installed — the four bullets from `references/map.md`, verbatim.}
+
 ## Git
 {Branch · commit/push policy. Two lines max.}
 
@@ -255,7 +258,7 @@ Golden constraints live in the root `CLAUDE.md`.
 ## {Domain-specific section as needed}
 ```
 
-**The law, applied:** "golden constraints live in the root `CLAUDE.md`" is the whole allowed reference to root — this file never restates a root constraint's text, only its existence. A "Rule with teeth" is `{convention} — {consequence}`, present tense; there's no field in that shape for when the rule was added or what used to happen before it existed. Rejected, real examples: `RLS on every user table... This is root constraint 9` (restating constraint 9's text instead of just citing "constraint 9"), `that list is hand-enumerated (it has drifted before)` (the parenthetical isn't a consequence, it's an incident — the shape becomes `hand-enumerated — a table left off it silently breaks the GDPR export promise`). Never the same rule written in full in two different `{dir}/CLAUDE.md` files — one canonical home, a citation from the other. Budget: 200–500 tokens each.
+**The law, applied:** "golden constraints live in the root `CLAUDE.md`" is the whole allowed reference to root — this file never restates a root constraint's text, only its existence. A "Rule with teeth" is `{convention} — {consequence}`, present tense; there's no field in that shape for when the rule was added or what used to happen before it existed. Rejected, real examples: `RLS on every user table... This is root constraint 9` (restating constraint 9's text instead of just citing "constraint 9"), `that list is hand-enumerated (it has drifted before)` (the parenthetical isn't a consequence, it's an incident — the shape becomes `hand-enumerated — a table left off it silently breaks the GDPR export promise`). Never the same rule written in full in two different `{dir}/CLAUDE.md` files — one canonical home, a citation from the other. No file inventory or "where things are" list either — with a code map installed, that's the folder's `MAP.md`, generated. Budget: 200–500 tokens each.
 
 ---
 

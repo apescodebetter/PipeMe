@@ -1,0 +1,11 @@
+{
+  "systemMap": "docs/DIAGRAMS.md",
+  "entryPoints": ["scripts/**/*.mjs"],
+  "entryNames": [],
+  "tests": [],
+  "exclude": [],
+  "schema": ["supabase/migrations/*.sql"],
+  "messageSenders": [],
+  "docs": ["**/CLAUDE.md", "**/AGENTS.md", "**/TECH_SPEC.md", "README.md"],
+  "docsIgnore": []
+}

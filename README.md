@@ -19,7 +19,7 @@ Run `/pipeme` to interview you about your product idea (or `/pipeme this` to ana
 
 Docs fall into two cost classes. `CLAUDE.md` and its nested files are **always loaded** — their size is paid on every conversation turn — so they carry only safety-critical rules and a routing table. Everything else is **on demand**, reached through a conditional trigger with its measured token cost stated. PipeMe never generates a "read these files at session start" list, which is what silently turns a small bootstrap file into a large per-session tax.
 
-**Not produced:** changelogs (git history records what changed; `AGENTS.md` records why a rule exists) and brand/design-system docs (visual design is out of scope).
+**Not produced:** changelogs (git history records what changed; a code comment at the constraint records why a rule exists) and brand/design-system docs (visual design is out of scope).
 
 ## Commands
 
@@ -36,6 +36,7 @@ Docs fall into two cost classes. `CLAUDE.md` and its nested files are **always l
 | `/pipeme handoff` | Condense the doc suite into an onboarding brief |
 | `/pipeme claude.md` | Generate or rebuild `CLAUDE.md` + nested files (asks before overwriting; preserves hand-tuned structure) |
 | `/pipeme next` | Post-completion planning — close the current cycle, interview for the next one, update all docs in place |
+| `/pipeme map` | Install a generated code map in a JS/TS repo: per-folder `MAP.md` with line ranges, usage and dead-code tags, a Read hook for large files, an edit hook, a pre-push freshness check |
 
 ## Install
 
@@ -47,15 +48,25 @@ Download `pipeme.zip` (or clone this repo and zip the `pipeme/` folder), then in
 ```
 pipeme/
 ├── SKILL.md                       # main skill definition
-└── references/
-    ├── interview-guide.md         # question bank, round sizing logic
-    ├── output-templates.md        # document templates + the purity linter
-    └── document-rules.md          # per-doc literal shape + the one law
+├── references/
+│   ├── interview-guide.md         # question bank, round sizing logic
+│   ├── output-templates.md        # document templates + the purity linter
+│   ├── document-rules.md          # per-doc literal shape + the one law
+│   └── map.md                     # code map: formats, tags, hooks, install text
+└── scripts/map/                   # the code map generator, copied into a project by /pipeme map
+    ├── map.mjs                    # generate · check · report · docs · hook-read · hook-edit
+    ├── lib/                       # parse (TypeScript parser) → graph → render, docs check
+    ├── hooks/pre-push             # blocks a push to main/master with a stale map
+    └── test/run.mjs               # end-to-end test on a throwaway repo
 ```
 
 ## Version
 
-Current: **1.11**
+Current: **1.13**
+
+**1.13** — `/pipeme map`: a generated, committed code map for JS/TS repos, so agents grep to the exact line range instead of reading whole files. It has three layers: the architecture diagram as roots (written), per-folder `MAP.md` files as branches (generated), and function bodies as leaves (never stored). Each symbol line carries its range, who uses it, and dead-code tags (`unused`, `tests-only`, `half-pair`, `not in schema`, `keep until`). A Read hook sends whole-file reads of large files to the map first; repeating the Read allows it. An edit hook prints what an edit left unused or dangling. The map regenerates only when a branch merges into the main branch, and a pre-push check blocks a stale one. A `docs` command lists names in `CLAUDE.md`/`AGENTS.md`/`TECH_SPEC.md` that no longer exist in the code. Update Mode's drift check and Next Cycle's audit use it.
+
+**1.12** — Cut and sweep are one pass. Emptying `AGENTS.md` under 1.11 left pointers across the suite that still said "see AGENTS.md" for reasoning that was no longer there. Each of those lines was purity-clean on its own, so no check could see the problem. Golden Rule 6 now treats a pointer as two-directional work: cutting or moving content means updating every reference aimed at it in the same pass. Update Mode's drift check greps for inbound references to anything it cut. `document-rules.md` makes emptying `AGENTS.md` a cut-and-sweep. The purity linter lists every mention of `AGENTS.md` outside the file that still expects rationale there.
 
 **1.11** — Structure becomes enforceable, not just advisory.
 
