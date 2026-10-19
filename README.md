@@ -35,6 +35,7 @@ Docs fall into two cost classes. `CLAUDE.md` and its nested files are **always l
 | `/pipeme phase [N]` | Expand one roadmap phase into sprint/task-level detail |
 | `/pipeme handoff` | Condense the doc suite into an onboarding brief |
 | `/pipeme claude.md` | Generate or rebuild `CLAUDE.md` + nested files (asks before overwriting; preserves hand-tuned structure) |
+| `/pipeme board` | Put a local roadmap board in the project: edit `ROADMAP.md` rows in place, archive done rows, leave notes for Claude in `ROADMAP.notes.json` |
 | `/pipeme next` | Post-completion planning — close the current cycle, interview for the next one, update all docs in place |
 | `/pipeme map` | Install a generated code map in a JS/TS repo: per-folder `MAP.md` with line ranges, usage and dead-code tags, `MAP.html` to browse the whole map, a Read hook for large files, an edit hook, a pre-push freshness check |
 
@@ -53,6 +54,8 @@ pipeme/
 │   ├── output-templates.md        # document templates + the purity linter
 │   ├── document-rules.md          # per-doc literal shape + the one law
 │   └── map.md                     # code map: formats, tags, hooks, install text
+├── assets/roadmap-board.html      # the roadmap board, copied into a project by /pipeme board
+├── scripts/check-board.mjs        # board check: byte-identical round trip, one-line edits
 └── scripts/map/                   # the code map generator, copied into a project by /pipeme map
     ├── map.mjs                    # generate · check · report · docs · hook-read · hook-edit
     ├── lib/                       # parse (TypeScript parser) → graph → render + MAP.html viewer, docs check
@@ -62,7 +65,9 @@ pipeme/
 
 ## Version
 
-Current: **1.14**
+Current: **1.15**
+
+**1.15** — `/pipeme board`: a local page that reads and edits `ROADMAP.md` directly in Chrome or Edge, with no server and no copy of the data. It edits task rows in place, line by line, and moves done rows to an archive file. Notes for Claude go to `ROADMAP.notes.json`, never into a row; Update Mode reads them. `scripts/check-board.mjs` checks the board against a real roadmap.
 
 **1.14** — `MAP.html`: the whole code map as one page for people. `generate` writes it at the root in the same run as the MAP files, from the same graph, and `check` and pre-push cover it, so it never drifts from them. Open it in a browser; there's no command to run. It shows a treemap of every folder and file sized by lines, colored by dead-code tag, striped where no test covers it. Click a folder to open it, or a file to see its functions with line ranges (a click copies `path:start-end` for an agent) and who uses it. Search takes the same task words agents grep for. It's self-contained, works offline, and has light and dark themes. Agents keep reading `MAP.md`; the page's data is one short record per line, so a repo-wide grep that hits it stays small.
 

@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap">
+<style>
+/* Local board for ROADMAP.md: the Markdown stays the source of truth; notes for Claude live in ROADMAP.notes.json. */
+:root {
+  --rail: #1a1a19; --stock: #262624; --col: #1f1f1d; --ink: #ecebe4; --muted: #9c9a92;
+  --line: #3a3936; --line-soft: #2e2e2b; --shadow: rgb(0 0 0 / 0.35); --scrim: rgb(0 0 0 / 0.55); color-scheme: dark;
+  --clay: #d97757; --clay-tint: #3a2b25; --clay-ink: #e8957a; --pill: #3a3936; --on-clay: #fff;
+  --ink-done: #a8d07a; --ink-blocked: #f0614a; --ink-doing: #7fb6f0; --ink-parked: #b39ddb; --ink-todo: #c2bfb5;
+  --font: "Inter", "Segoe UI", system-ui, sans-serif;
+  --fs-root: clamp(14px, 0.4vw + 9px, 19px);
+  --fs-xs: 0.7rem; --fs-s: 0.78rem; --fs-m: 0.875rem; --fs-l: 1.2rem;
+  --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem; --s5: 1.5rem; --s6: 2rem; --r: 0.6rem;
+  --col-w: clamp(17rem, 22vw, 26rem); --panel-w: clamp(20rem, 30vw, 34rem);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html { font-size: var(--fs-root); scrollbar-color: var(--line) transparent; -webkit-text-size-adjust: 100% }
+body { margin: 0; background: var(--rail); color: var(--ink); font: 400 var(--fs-m)/1.45 var(--font); caret-color: var(--clay);
+  height: 100dvh; display: flex; flex-direction: column; overflow: hidden }
+button, select, input, textarea { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--clay); outline-offset: 2px }
+::selection { background: color-mix(in srgb, var(--clay) 24%, transparent) }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 0.92em; background: var(--line-soft); padding: 0 var(--s1); border-radius: var(--s1) }
+
+.btn { border: 0; border-radius: var(--r); background: var(--pill); cursor: pointer; padding: 0 var(--s3); min-height: 2.2rem; font-size: var(--fs-s); font-weight: 500; white-space: nowrap }
+.btn:hover { background: var(--line) }
+.btn.primary { background: var(--clay); color: var(--on-clay) }
+.btn.primary:hover { filter: brightness(1.1) }
+.btn:disabled { opacity: 0.5; cursor: default }
+
+.top { flex: none; background: var(--rail); box-shadow: 0 1px 0 var(--line); padding: var(--s3) var(--s4); display: grid; gap: var(--s2) }
+.masthead, .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3) }
+.grow { flex: 1 }
+h1 { margin: 0; font-size: var(--fs-l); font-weight: 600; letter-spacing: -0.01em }
+.count-line { color: var(--muted); font-size: var(--fs-s) }
+.state { border: 0; background: none; cursor: default; font-size: var(--fs-s); color: var(--ink-done); display: inline-flex; gap: var(--s2); align-items: center; padding: var(--s1) var(--s2); border-radius: var(--r) }
+.state::before { content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor }
+.state[data-dirty] { color: var(--clay-ink); cursor: pointer; background: var(--clay-tint) }
+.seg { display: inline-flex; background: var(--line-soft); border-radius: var(--r); padding: 0.2rem; gap: 0.15rem }
+.seg button { border: 0; background: none; cursor: pointer; padding: var(--s1) var(--s3); border-radius: var(--s2); color: var(--muted); font-size: var(--fs-s); min-height: 1.9rem }
+.seg button:hover { color: var(--ink) }
+.seg button[aria-pressed="true"] { background: var(--pill); color: var(--ink); box-shadow: 0 1px 2px var(--shadow) }
+.search { flex: 1 1 10rem; max-width: 24rem; background: var(--stock); border: 1px solid var(--line); border-radius: var(--r); padding: 0 var(--s3); min-height: 2.2rem; font-size: var(--fs-s) }
+.search:focus, .field:focus { outline: none; border-color: var(--clay); box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--clay) 18%, transparent) }
+.msg { font-size: var(--fs-s); color: var(--muted); margin: 0; white-space: pre-line }
+.msg[data-bad] { color: var(--ink-blocked) }
+
+.shell { flex: 1; min-height: 0; display: flex }
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: var(--s3) var(--s4) var(--s3) var(--s4) }
+.start { margin: auto; display: grid; gap: var(--s3); justify-items: center; text-align: center; max-width: 30rem; color: var(--muted) }
+.board { flex: 1; min-height: 0; display: flex; gap: var(--s3); align-items: flex-start; overflow-x: auto; padding-bottom: var(--s2); scrollbar-color: var(--line) transparent }
+.col { flex: 0 0 var(--col-w); width: var(--col-w); max-height: 100%; overflow-y: auto; background: var(--col); border-radius: var(--s2); padding: 0 var(--s2) var(--s2); display: grid; gap: var(--s2); align-content: start; scrollbar-width: thin }
+.rbar { position: sticky; top: 0; z-index: 1; background: var(--col); display: flex; align-items: center; gap: var(--s1); padding-top: var(--s2) }
+.rhead { flex: 1; min-width: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: baseline; gap: var(--s2); text-align: left; padding: var(--s1) 0 }
+.rhead .chev { color: var(--muted); transition: transform .25s var(--ease); display: inline-block }
+.rhead[aria-expanded="true"] .chev { transform: rotate(90deg) }
+.rn { font-size: var(--fs-s); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; overflow-wrap: anywhere }
+.rc { color: var(--muted); font-size: var(--fs-xs); white-space: nowrap }
+.rall { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: var(--fs-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: var(--s1) var(--s2); border-radius: var(--s1); white-space: nowrap }
+.rall:hover { color: var(--ink); background: var(--line-soft) }
+
+.card { background: var(--stock); border-radius: var(--r); box-shadow: 0 1px 2px var(--shadow), 0 0 0 1px var(--line-soft); padding: var(--s2) var(--s3); display: grid; gap: var(--s1); cursor: pointer; min-width: 0 }
+.card:hover { box-shadow: 0 1px 2px var(--shadow), 0 0 0 1px var(--line) }
+.card[aria-selected="true"] { box-shadow: 0 0 0 2px var(--clay) }
+.card[data-edited] .cid::after { content: " •"; color: var(--clay-ink) }
+.chead { display: flex; align-items: center; gap: var(--s2) }
+.cid { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums }
+.pill { margin-left: auto; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 var(--s2); border: 1.5px solid currentColor; border-radius: var(--s1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: var(--ink-todo) }
+.pill[data-s="in progress"] { color: var(--ink-doing) } .pill[data-s="done"] { color: var(--ink-done) }
+.pill[data-s="blocked"] { color: var(--ink-blocked) } .pill[data-s="parked"] { color: var(--ink-parked) } .pill[data-s="raw"] { color: var(--muted); font-weight: 500; text-transform: none }
+.mark { color: var(--clay-ink); font-size: var(--fs-s) }
+.ctask { font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; text-wrap: pretty }
+.card[data-done] .ctask { text-decoration: line-through; text-decoration-color: var(--muted); color: var(--muted) }
+.cdeps { color: var(--muted); font-size: var(--fs-xs); overflow-wrap: anywhere }
+.carch { justify-self: start; border: 0; background: none; cursor: pointer; color: var(--muted); font-size: var(--fs-xs); padding: 0; text-decoration: underline }
+.carch:hover { color: var(--ink) }
+
+.panel { flex: 0 0 var(--panel-w); width: var(--panel-w); max-width: 100%; background: var(--col); border-left: 1px solid var(--line); overflow-y: auto; padding: var(--s4); display: grid; gap: var(--s3); align-content: start }
+.panel h2 { margin: 0; font-size: var(--fs-m); display: flex; justify-content: space-between; gap: var(--s2); align-items: center }
+.lab { display: grid; gap: var(--s1); font-size: var(--fs-xs); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em }
+.lab > * { text-transform: none; letter-spacing: 0; font-weight: 400 }
+.hint { font-size: var(--fs-xs); color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0 }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s2) }
+.field, select.field { width: 100%; min-width: 0; background: var(--stock); border: 1px solid var(--line); border-radius: var(--s1); padding: var(--s2); min-height: 2.2rem; color: var(--ink); font-size: var(--fs-s) }
+textarea.field { min-height: 5rem; resize: vertical; line-height: 1.45 }
+.notes-box { background: var(--clay-tint); border-radius: var(--r); padding: var(--s3); display: grid; gap: var(--s2) }
+.notes-box .lab { color: var(--clay-ink) }
+.preview { color: var(--muted); font-size: var(--fs-xs); overflow-wrap: anywhere; margin: 0 }
+.actions { display: flex; gap: var(--s2); flex-wrap: wrap }
+
+dialog { background: var(--stock); color: var(--ink); border: 1px solid var(--line); border-radius: var(--r); padding: var(--s4); width: min(28rem, 92vw) }
+dialog::backdrop { background: var(--scrim) }
+dialog form { display: grid; gap: var(--s3) }
+
+@media (max-width: 700px) {
+  body { height: auto; overflow: auto }
+  .shell { display: block }
+  .board { flex-direction: column; align-items: stretch; overflow-x: visible }
+  .col, .col[data-shut] { flex: none; width: auto; max-height: none }
+  .panel { position: fixed; inset: 0; z-index: 10; width: auto; flex: none; border-left: 0 }
+  .top { position: sticky; top: 0; z-index: 5 }
+}
+body.panning .board, body.panning .board * { cursor: grab !important; user-select: none }
+body.panning.dragging .board, body.panning.dragging .board * { cursor: grabbing !important }
+/* First run: only the title, the sentence and the folder button. */
+body:has(#start:not([hidden])) :is(.toolbar, #state, #reload, #folder, #new) { display: none }
+.ow { display: none }
+@media (min-width: 1100px) { .ow { display: inline } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="masthead">
+    <h1 id="pname">Roadmap board</h1>
+    <span class="count-line" id="counts"></span>
+    <span class="grow"></span>
+    <button class="state" id="state" type="button">Saved</button>
+    <button class="btn" id="undo" type="button" hidden title="Put back ROADMAP.md and the archive as they were before the last save">Undo last save</button>
+    <button class="btn" id="reload" type="button">Reload</button>
+    <button class="btn" id="folder" type="button">Change folder</button>
+    <button class="btn primary" id="new" type="button" disabled>New task</button>
+  </div>
+  <div class="toolbar">
+    <div class="seg" id="fowner" role="group" aria-label="Owner">
+      <button type="button" data-v="" aria-pressed="true">All</button>
+      <button type="button" data-v="🤖" aria-pressed="false" title="Agent">🤖<span class="ow"> Agent</span></button>
+      <button type="button" data-v="👤" aria-pressed="false" title="You">👤<span class="ow"> You</span></button>
+      <button type="button" data-v="🤝" aria-pressed="false" title="Both">🤝<span class="ow"> Both</span></button>
+    </div>
+    <div class="seg" id="fstatus" role="group" aria-label="Status">
+      <button type="button" data-v="open" aria-pressed="true">Not done</button>
+      <button type="button" data-v="all" aria-pressed="false">All</button>
+      <button type="button" data-v="done" aria-pressed="false">Done</button>
+    </div>
+    <input class="search" id="q" type="search" placeholder="Search ID, task, notes" aria-label="Search">
+  </div>
+  <p class="msg" id="msg" role="status"></p>
+</header>
+
+<div class="shell">
+  <main class="main">
+    <div class="start" id="start" hidden>
+      <p id="starttext">Pick the project folder that holds ROADMAP.md (at the root or in docs/). The board reads and writes that file only.</p>
+      <div class="actions">
+        <button class="btn primary" id="choose" type="button">Choose project folder</button>
+        <button class="btn" id="reconnect" type="button" hidden></button>
+      </div>
+    </div>
+    <div class="board" id="board" hidden></div>
+  </main>
+
+  <aside class="panel" id="panel" hidden aria-label="Task">
+    <h2><span id="ptitle"></span><button class="btn" id="pclose" type="button">Close</button></h2>
+    <label class="lab">Task <textarea class="field" id="ftask" rows="2"></textarea></label>
+    <div class="two">
+      <label class="lab">Owner <select class="field" id="fown"><option value="🤖">🤖 Agent</option><option value="👤">👤 You</option><option value="🤝">🤝 Both</option></select></label>
+      <label class="lab">Status <select class="field" id="fst">
+        <option value="todo">todo</option><option value="in progress">in progress</option><option value="done">done</option>
+        <option value="blocked">blocked</option><option value="parked">parked</option><option value="raw" hidden>(as written)</option></select></label>
+    </div>
+    <div class="two">
+      <label class="lab">Date <input class="field" id="fdate" type="date"></label>
+      <label class="lab">Note pointer <input class="field" id="fnote" type="text" placeholder="H39, a file, a commit"></label>
+    </div>
+    <p class="preview" id="fprev"></p>
+    <label class="lab">Depends on <input class="field" id="fdeps" type="text"></label>
+    <label class="lab">Done when <textarea class="field" id="fdone" rows="4"></textarea></label>
+    <div class="notes-box">
+      <label class="lab">Notes for Claude <textarea class="field" id="fnotes" rows="5"></textarea>
+        <span class="hint">Context, what you want, who it depends on. Not written into the roadmap.</span></label>
+    </div>
+    <div class="actions"><button class="btn primary" id="psave" type="button">Save</button><span class="hint">Ctrl+S</span></div>
+  </aside>
+</div>
+
+<dialog id="dnew">
+  <form method="dialog">
+    <label class="lab">Phase <select class="field" id="nphase"></select></label>
+    <label class="lab">ID <input class="field" id="nid" required pattern="[^\s|]+"><span class="hint" id="nidhint"></span></label>
+    <label class="lab">Task <input class="field" id="ntask" required></label>
+    <div class="actions"><button class="btn primary" value="ok">Add</button><button class="btn" value="cancel" formnovalidate>Cancel</button></div>
+  </form>
+</dialog>
+
+<!-- Parser and writer: no DOM in here, so check-board.mjs can run it in node. -->
+<script id="roadmap-core">
+const RoadmapCore = (() => {
+  const HEADER = '| ID | Task | Owner | Status | Depends on | Done when |';
+  const SEPLINE = '|---|---|---|---|---|---|';
+  const SEP = /^\|\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?$/;
+  const STATUS = /^(todo|in progress|done|blocked|parked)(?: (\d{4}-\d{2}-\d{2}))?(?: Note: ([\s\S]*))?$/;
+
+  const splitLines = text => (text.match(/[^\n]*\n|[^\n]+$/g) || []).map(l => {
+    const m = /\r?\n$/.exec(l);
+    return m ? { t: l.slice(0, m.index), e: m[0] } : { t: l, e: '' };
+  });
+  const joinLines = ls => ls.map(l => l.t + l.e).join('');
+  const eolOf = ls => (ls.find(l => l.e) || { e: '\n' }).e;
+  const unesc = s => s.trim().replace(/\\\|/g, '|');
+  const esc = s => String(s).replace(/\r?\n/g, ' ').trim().replace(/\|/g, '\\|');
+
+  // A table row line -> { lead, cells (raw, padding kept), tail }; null when it isn't "| a | b |".
+  function splitRow(t) {
+    const p = t.split(/(?<!\\)\|/);
+    if (p.length < 2 || p[0].trim()) return null;
+    const tail = p[p.length - 1].trim() === '' ? p.pop() : null;
+    return { lead: p[0], cells: p.slice(1), tail };
+  }
+  const buildRow = r => r.lead + '|' + r.cells.join('|') + (r.tail === null ? '' : '|' + r.tail);
+
+  function parseStatus(s) {
+    const m = STATUS.exec(s.trim());
+    return m ? { word: m[1], date: m[2] || '', note: m[3] || '' } : { raw: s };
+  }
+  const buildStatus = st => st.raw !== undefined ? st.raw : st.word + (st.date ? ' ' + st.date : '') + (st.note ? ' Note: ' + st.note : '');
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+  function parseLines(lines) {
+    const phases = [], skipped = [];
+    let ph = null;
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].t;
+      if (/^## /.test(t)) { ph = { heading: t.slice(3).trim(), line: i, rows: [], lastRow: -1, table: false }; phases.push(ph); continue; }
+      if (!ph || t.trim() !== HEADER || !SEP.test((lines[i + 1] || { t: '' }).t.trim())) continue;
+      ph.table = true; i++;
+      while (i + 1 < lines.length && /^\s*\|/.test(lines[i + 1].t)) {
+        i++;
+        ph.lastRow = i;
+        const r = splitRow(lines[i].t);
+        if (!r || r.cells.length !== 6) { skipped.push({ line: i, text: lines[i].t }); continue; }
+        const c = r.cells.map(unesc);
+        ph.rows.push({ line: i, id: c[0], task: c[1], owner: c[2], status: c[3], st: parseStatus(c[3]), deps: c[4], done: c[5] });
+      }
+    }
+    return { phases, skipped };
+  }
+  const parseDoc = text => parseLines(splitLines(text));
+  const findRow = (doc, id) => { for (const p of doc.phases) for (const r of p.rows) if (r.id === id) return { row: r, phase: p }; return null; };
+
+  // Insert after lines[idx]; new lines take that line's ending, and a file with no final newline keeps having none.
+  function insertAfter(lines, idx, texts, eol) {
+    const last = idx === lines.length - 1 && !lines[idx].e;
+    const e = lines[idx].e || eol;
+    if (last) lines[idx].e = e;
+    lines.splice(idx + 1, 0, ...texts.map((t, k) => ({ t, e: last && k === texts.length - 1 ? '' : e })));
+  }
+
+  // edits: {op:'set', id, f:{task,owner,status,deps,done}} | {op:'add', phase, id, f} | {op:'archive', id}, applied by ID to this text.
+  function applyEdits(text, edits) {
+    const lines = splitLines(text), eol = eolOf(lines), missing = [], errors = [], moved = [];
+    const cols = { task: 1, owner: 2, status: 3, deps: 4, done: 5 };
+    for (const ed of edits) {
+      const doc = parseLines(lines);
+      if (ed.op === 'add') {
+        const ph = doc.phases.find(p => p.table && p.heading === ed.phase);
+        if (!ph) { errors.push(`Phase "${ed.phase}" not found; ${ed.id} not added.`); continue; }
+        if (findRow(doc, ed.id)) { errors.push(`${ed.id} already exists; not added.`); continue; }
+        const f = ed.f;
+        insertAfter(lines, ph.lastRow, ['| ' + [ed.id, f.task, f.owner, f.status, f.deps, f.done].map(esc).join(' | ') + ' |'], eol);
+        continue;
+      }
+      const hit = findRow(doc, ed.id);
+      if (!hit) { missing.push(ed.id); continue; }
+      if (ed.op === 'archive') {
+        const [gone] = lines.splice(hit.row.line, 1);
+        if (!gone.e && hit.row.line > 0) lines[hit.row.line - 1].e = '';
+        moved.push({ heading: hit.phase.heading, text: gone.t });
+        continue;
+      }
+      const r = splitRow(lines[hit.row.line].t);
+      let changed = false;
+      for (const [k, v] of Object.entries(ed.f)) {
+        const i = cols[k];
+        if (i === undefined || v === undefined || unesc(r.cells[i]) === String(v).replace(/\r?\n/g, ' ').trim()) continue;
+        const c = r.cells[i], blank = c.trim() === '';
+        r.cells[i] = (blank ? ' ' : /^\s*/.exec(c)[0]) + esc(v) + (blank ? ' ' : /\s*$/.exec(c)[0]);
+        changed = true;
+      }
+      if (changed) lines[hit.row.line].t = buildRow(r);
+    }
+    return { text: joinLines(lines), missing, errors, moved };
+  }
+
+  // Append moved rows to the `## heading` section of the archive text; create the section (header + separator) when missing.
+  function archiveInto(text, moved, eolHint) {
+    const lines = splitLines(text), eol = lines.length ? eolOf(lines) : (eolHint || '\n');
+    const heads = [...new Set(moved.map(m => m.heading))];
+    for (const h of heads) {
+      const rows = moved.filter(m => m.heading === h).map(m => m.text);
+      const at = lines.findIndex(l => l.t.trimEnd() === '## ' + h);
+      let lastTbl = -1;
+      if (at >= 0) for (let i = at + 1; i < lines.length && !/^## /.test(lines[i].t); i++) if (/^\s*\|/.test(lines[i].t)) lastTbl = i;
+      const fresh = ['', '## ' + h, '', HEADER, SEPLINE, ...rows];
+      if (lastTbl >= 0) insertAfter(lines, lastTbl, rows, eol);
+      else if (at >= 0) insertAfter(lines, at, ['', HEADER, SEPLINE, ...rows], eol);
+      else if (lines.length) insertAfter(lines, lines.length - 1, fresh, eol);
+      else fresh.slice(1).forEach(t => lines.push({ t, e: eol }));
+    }
+    return joinLines(lines);
+  }
+
+  // Next ID in a phase: max numeric suffix over IDs sharing the phase's most common prefix (also scanning the archive text); null when there is none.
+  function nextId(doc, heading, archiveText) {
+    const ph = doc.phases.find(p => p.table && p.heading === heading);
+    if (!ph) return null;
+    const count = {};
+    for (const r of ph.rows) { const m = /^(.+)\.(\d+)$/.exec(r.id); if (m) count[m[1]] = (count[m[1]] || 0) + 1; }
+    const num = (/^Phase (\d+)/.exec(heading) || [])[1];   // a phase mixing prefixes prefers its own number
+    const prefix = count[num] ? num : Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+    if (!prefix) return null;
+    let max = 0;
+    const take = id => { const m = /^(.+)\.(\d+)$/.exec(id); if (m && m[1] === prefix) max = Math.max(max, +m[2]); };
+    doc.phases.forEach(p => p.rows.forEach(r => take(r.id)));
+    if (archiveText) for (const l of splitLines(archiveText)) { const m = /^\|\s*([^|\s]+)\s*\|/.exec(l.t); if (m) take(m[1]); }
+    return prefix + '.' + (max + 1);
+  }
+
+  const sidecarText = obj => JSON.stringify(obj, null, 1) + '\n';
+
+  return { splitLines, joinLines, parseDoc, parseStatus, buildStatus, today, applyEdits, archiveInto, nextId, sidecarText, findRow, HEADER, SEPLINE };
+})();
+</script>
+
+<script id="demo-data" type="text/plain">
+# Demo — Roadmap · Cycle 1
+
+> Sample roadmap held in memory. Saving is off.
+
+---
+
+## Phase 1 — Sign-in
+
+Goal: people get in.
+
+| ID | Task | Owner | Status | Depends on | Done when |
+|---|---|---|---|---|---|
+| 1.1 | Email and Google sign-up | 🤖 | done 2026-10-13 | — | Both paths create an account `[live]` |
+| 1.2 | Reset password mail with a `a \| b` pipe in the text | 🤖 | in progress 2026-10-17 Note: waits on H2 | 1.1 | The mail arrives within a minute |
+| 1.3 | Turnstile on log-in | 🤝 | blocked 2026-10-17 Note: H1 | 1.1, H1 | Log-in shows no challenge to a normal user |
+| 1.4 | Remember me | 🤖 | todo | — | A session lasts 30 days |
+
+## Phase 2 — Billing
+
+Goal: take one payment.
+
+| ID | Task | Owner | Status | Depends on | Done when |
+|---|---|---|---|---|---|
+| 2.1 | Stripe checkout for the week pass | 🤝 | todo | 1.1 | Test-mode round trip |
+| 2.2 | Receipt email | 🤖 | parked 2026-10-01 Note: after launch | 2.1 | A receipt arrives |
+| 2.3 | Refund path | 🤖 | Postponed to release | 2.1 | Raw status text is kept as written |
+
+## Phase 3 — Polish
+
+| ID | Task | Owner | Status | Depends on | Done when |
+|---|---|---|---|---|---|
+| 3.1 | Dark mode contrast sweep | 🤖 | done 2026-10-15 | — | Every page passes AA |
+
+## Deferred (not scheduled this cycle)
+
+| Item | Status | Blocker |
+|---|---|---|
+| Mobile app | Dropped | PRD non-goal |
+
+## Human Action Queue (👤 / 🤝)
+
+| # | Action | Blocks | External wait |
+|---|---|---|---|
+| H1 | Turnstile site key | 1.3 | — |
+| H2 | Resend API key | 1.2 | — |
+</script>
+
+<script>
+(() => {
+  const Core = RoadmapCore, $ = id => document.getElementById(id);
+  const S = {
+    demo: new URLSearchParams(location.search).has('demo'),
+    dir: null, prefix: '', roadPath: '', base: '', pending: [], side: {}, notes: {}, notesEdit: {}, archivePath: '', archiveDirty: false,
+    guess: '', doc: { phases: [], skipped: [] }, sel: null, undo: null, handle: null,
+    f: { owner: '', status: 'open', q: '' }, shut: new Set(JSON.parse(localStorage.getItem('rb-shut') || '[]')),
+  };
+
+  // ---- helpers
+  const el = (tag, props, ...kids) => { const n = Object.assign(document.createElement(tag), props); n.append(...kids); return n; };
+  const rich = text => { const f = document.createDocumentFragment(); text.split('`').forEach((s, i) => f.append(i % 2 ? el('code', { textContent: s }) : s)); return f; };
+  const say = (t, bad) => { $('msg').textContent = t || ''; if (bad) $('msg').setAttribute('data-bad', ''); else $('msg').removeAttribute('data-bad'); };
+  const dirty = () => S.pending.length > 0 || Object.keys(S.notesEdit).length > 0 || S.archiveDirty;
+  const noteOf = id => id in S.notesEdit ? S.notesEdit[id] : (S.notes[id] ? S.notes[id].text : '');
+  const isDone = r => r.st.word === 'done';
+
+  // ---- file system
+  const resolve = async (path, create) => {
+    if (/(^|\/)\.\.?(\/|$)|^\//.test(path)) throw new Error('Use a path inside the project folder.');
+    const parts = path.split('/').filter(Boolean), name = parts.pop();
+    let d = S.dir;
+    for (const p of parts) d = await d.getDirectoryHandle(p, { create });
+    return { d, name };
+  };
+  const readText = async path => {
+    try { const { d, name } = await resolve(path, false); const f = await (await d.getFileHandle(name)).getFile(); return new TextDecoder('utf-8', { ignoreBOM: true }).decode(await f.arrayBuffer()); }
+    catch (e) { if (e.name === 'NotFoundError') return null; throw e; }
+  };
+  const writeText = async (path, text) => {
+    const { d, name } = await resolve(path, true);
+    const w = await (await d.getFileHandle(name, { create: true })).createWritable();
+    await w.write(text); await w.close();
+  };
+  const idb = () => new Promise((ok, no) => { const r = indexedDB.open('roadmap-board', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); });
+  const idbGet = async () => { try { const db = await idb(); return await new Promise(ok => { const q = db.transaction('h').objectStore('h').get('dir'); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); } catch { return null; } };
+  const idbPut = async h => { const db = await idb(); await new Promise((ok, no) => { const t = db.transaction('h', 'readwrite'); t.objectStore('h').put(h, 'dir'); t.oncomplete = ok; t.onerror = () => no(t.error); }); };
+
+  // Newest ROADMAP_CYCLE_<n>_DONE.md in archive/ or docs/archive/, as a path relative to ROADMAP.md's folder.
+  async function guessArchive() {
+    let best = null;
+    for (const dn of ['archive', 'docs/archive']) {
+      try {
+        const { d, name } = await resolve(S.prefix + dn + '/x', false);
+        for await (const [n] of d.entries()) { const m = /^ROADMAP_CYCLE_(\d+)_DONE\.md$/.exec(n); if (m && (!best || +m[1] > best.n)) best = { n: +m[1], path: dn + '/' + n }; }
+      } catch { /* folder missing */ }
+    }
+    if (best) return best.path;
+    const c = /Cycle (\d+)/.exec(Core.splitLines(S.base)[0]?.t || '');
+    return 'archive/ROADMAP_CYCLE_' + (c ? c[1] : 1) + '_DONE.md';
+  }
+
+  async function load() {
+    if (S.demo) { S.base = $('demo-data').textContent.replace(/^\n/, ''); S.prefix = ''; $('pname').textContent = 'Demo'; }
+    else {
+      let t = await readText('ROADMAP.md');
+      S.prefix = '', S.roadPath = 'ROADMAP.md';
+      if (t === null) { t = await readText('docs/ROADMAP.md'); S.prefix = 'docs/'; S.roadPath = 'docs/ROADMAP.md'; }
+      if (t === null) { say('No ROADMAP.md at the root or in docs/ of that folder.', true); return false; }
+      S.base = t;
+      const side = await readText(S.prefix + 'ROADMAP.notes.json');
+      try { S.side = side ? JSON.parse(side) : {}; } catch { S.side = {}; say('ROADMAP.notes.json is not valid JSON; it is ignored until the next note is saved.', true); }
+      S.notes = S.side.notes || {}; S.archivePath = S.side.archive || '';
+      S.guess = await guessArchive();
+      $('pname').textContent = S.dir.name;
+    }
+    S.pending = []; S.notesEdit = {}; S.archiveDirty = false; S.undo = null;
+    $('start').hidden = true; $('board').hidden = false; $('new').disabled = false;
+    $('psave').disabled = S.demo;
+    render();
+    return true;
+  }
+
+  // ---- save: re-read, re-apply pending edits by row ID, write archive then roadmap then sidecar
+  async function save() {
+    if (S.demo) return say('Saving is off in demo mode.');
+    if (!dirty()) return say('Nothing to save.');
+    try {
+      const fresh = await readText(S.roadPath);
+      if (fresh === null) throw new Error('ROADMAP.md is gone.');
+      const r = Core.applyEdits(fresh, S.pending), out = [];
+      if (fresh !== S.base) out.push('The file changed on disk; your edits were re-applied to the new text.');
+      if (r.missing.length) out.push('Row gone, not written: ' + [...new Set(r.missing)].join(', ') + '.');
+      out.push(...r.errors);
+      let arch = null;
+      if (r.moved.length) {
+        const ap = S.prefix + S.archivePath, old = await readText(ap);
+        await writeText(ap, Core.archiveInto(old === null ? '# Archived rows\n\n' : old, r.moved, Core.splitLines(fresh)[0]?.e));
+        arch = { path: ap, old };
+        out.push('Archived ' + r.moved.length + ' row(s) to ' + S.archivePath + '.');
+      }
+      if (r.text !== fresh) await writeText(S.roadPath, r.text);
+      if (Object.keys(S.notesEdit).length || S.archiveDirty) {
+        const sc = await readText(S.prefix + 'ROADMAP.notes.json');
+        let side = {}; try { side = sc ? JSON.parse(sc) : {}; } catch { side = {}; }
+        const notes = side.notes || {};
+        for (const [id, text] of Object.entries(S.notesEdit)) { if (text.trim()) notes[id] = { text, at: new Date().toISOString() }; else delete notes[id]; }
+        const next = { ...side, notes };
+        if (S.archivePath) next.archive = S.archivePath;
+        await writeText(S.prefix + 'ROADMAP.notes.json', Core.sidecarText(next));
+        S.side = next; S.notes = notes;
+      }
+      S.undo = { road: r.text !== fresh ? fresh : null, arch };
+      S.base = r.text; S.pending = []; S.notesEdit = {}; S.archiveDirty = false;
+      say(out.join('\n') || 'Saved.', r.missing.length > 0 || r.errors.length > 0);
+      render();
+    } catch (e) { say('Save failed: ' + e.message, true); }
+  }
+
+  async function undo() {
+    if (!S.undo || !confirm('Put ROADMAP.md and the archive back as they were before the last save?')) return;
+    try {
+      const u = S.undo;
+      if (u.arch) { if (u.arch.old === null) { const { d, name } = await resolve(u.arch.path, false); await d.removeEntry(name); } else await writeText(u.arch.path, u.arch.old); }
+      if (u.road !== null) await writeText(S.roadPath, u.road);
+      await load(); say('Undone.');
+    } catch (e) { say('Undo failed: ' + e.message, true); }
+  }
+
+  // ---- staging edits (pending ops, applied to the base text for the view and again on save)
+  function stage(id, f) {
+    let op = S.pending.find(o => o.op === 'set' && o.id === id);
+    if (!op) S.pending.push(op = { op: 'set', id, f: {} });
+    Object.assign(op.f, f);
+    refresh(); renderBoard(); renderState();
+  }
+  function archiveRows(ids) {
+    if (!ids.length) return;
+    if (!S.archivePath) {
+      const p = (prompt('Archive file, relative to ROADMAP.md\'s folder:', S.guess) || '').trim().replace(/\\/g, '/');
+      if (!p) return;
+      if (/(^|\/)\.\.?(\/|$)|^\//.test(p)) return say('Use a path inside the project folder.', true);
+      S.archivePath = p; S.archiveDirty = true;
+    }
+    ids.forEach(id => S.pending.push({ op: 'archive', id }));
+    render();
+  }
+
+  // ---- render
+  const refresh = () => { S.doc = Core.parseDoc(Core.applyEdits(S.base, S.pending).text); };
+  function render() {
+    refresh();
+    renderBoard(); renderState();
+    if (S.sel) { if (Core.findRow(S.doc, S.sel)) fillPanel(); else closePanel(); }
+  }
+  function renderState() {
+    const b = $('state'), d = dirty();
+    b.textContent = S.demo ? 'Demo (no saving)' : d ? 'Unsaved · Save' : 'Saved';
+    d && !S.demo ? b.setAttribute('data-dirty', '') : b.removeAttribute('data-dirty');
+    $('undo').hidden = !S.undo;
+    let open = 0, done = 0;
+    S.doc.phases.forEach(p => p.rows.forEach(r => isDone(r) ? done++ : open++));
+    $('counts').textContent = open + ' open · ' + done + ' done';
+  }
+  function match(r) {
+    const f = S.f;
+    if (f.owner && r.owner !== f.owner) return false;
+    if (f.status === 'open' && isDone(r)) return false;
+    if (f.status === 'done' && !isDone(r)) return false;
+    return !f.q || [r.id, r.task, r.deps, r.done, r.status, noteOf(r.id)].join('\n').toLowerCase().includes(f.q);
+  }
+  function card(r) {
+    const mark = noteOf(r.id) ? el('span', { className: 'mark', textContent: '✎', title: 'Has a note for Claude' }) : '';
+    const st = r.st.raw !== undefined ? { s: 'raw', t: r.st.raw } : { s: r.st.word, t: r.st.word + (r.st.date ? ' ' + r.st.date : '') };
+    const edited = S.pending.some(o => o.id === r.id && o.op === 'set') || S.pending.some(o => o.op === 'add' && o.id === r.id);
+    const c = el('article', { className: 'card', tabIndex: 0 },
+      el('div', { className: 'chead' }, el('span', { className: 'cid', textContent: r.id }), el('span', { textContent: r.owner, title: { '🤖': 'Agent', '👤': 'You', '🤝': 'Both' }[r.owner] || '' }), mark,
+        el('span', { className: 'pill', textContent: st.t, title: r.st.note ? 'Note: ' + r.st.note : st.t })),
+      el('div', { className: 'ctask' }, rich(r.task)));
+    c.dataset.s = st.s; c.dataset.id = r.id;
+    if (isDone(r)) c.setAttribute('data-done', '');
+    if (edited) c.setAttribute('data-edited', '');
+    c.querySelector('.pill').dataset.s = st.s;
+    if (r.deps && r.deps !== '—') c.append(el('div', { className: 'cdeps', textContent: 'After ' + r.deps }));
+    if (isDone(r)) c.append(el('button', { className: 'carch', type: 'button', textContent: 'Archive', onclick: e => { e.stopPropagation(); archiveRows([r.id]); } }));
+    c.setAttribute('aria-selected', String(r.id === S.sel));
+    const open = () => { if (!document.body.classList.contains('panning')) openPanel(r.id); };
+    c.onclick = open; c.onkeydown = e => { if (e.key === 'Enter' && e.target === c) open(); };
+    return c;
+  }
+  function renderBoard() {
+    const board = $('board'), keep = [board.scrollLeft, board.scrollTop];
+    board.replaceChildren();
+    for (const ph of S.doc.phases.filter(p => p.table)) {
+      const rows = ph.rows.filter(match);
+      if (!rows.length && ph.rows.length) continue;
+      const shut = S.shut.has(ph.heading), doneRows = ph.rows.filter(isDone);
+      const col = el('section', { className: 'col' });
+      if (shut) col.setAttribute('data-shut', '');
+      const head = el('button', { className: 'rhead', type: 'button', onclick: () => { shut ? S.shut.delete(ph.heading) : S.shut.add(ph.heading); localStorage.setItem('rb-shut', JSON.stringify([...S.shut])); renderBoard(); } },
+        el('span', { className: 'chev', textContent: '›' }), el('span', { className: 'rn', textContent: ph.heading }), el('span', { className: 'rc', textContent: (ph.rows.length - doneRows.length) + '/' + ph.rows.length }));
+      head.setAttribute('aria-expanded', String(!shut));
+      const bar = el('div', { className: 'rbar' }, head);
+      if (doneRows.length) bar.append(el('button', { className: 'rall', type: 'button', textContent: 'Archive done rows', onclick: () => confirm('Move ' + doneRows.length + ' done row(s) out of the roadmap?') && archiveRows(doneRows.map(r => r.id)) }));
+      col.append(bar);
+      if (!shut) rows.forEach(r => col.append(card(r)));
+      board.append(col);
+    }
+    if (!board.children.length) board.append(el('p', { className: 'start', textContent: 'Nothing matches the filters.' }));
+    [board.scrollLeft, board.scrollTop] = keep;
+  }
+
+  // ---- panel
+  let rawStatus = null;
+  function fillPanel() {
+    const hit = Core.findRow(S.doc, S.sel); if (!hit) return;
+    const r = hit.row, st = r.st;
+    $('panel').hidden = false;
+    $('ptitle').textContent = r.id;
+    $('ftask').value = r.task; $('fown').value = r.owner; $('fdeps').value = r.deps; $('fdone').value = r.done;
+    rawStatus = st.raw !== undefined ? st.raw : null;
+    $('fst').querySelector('[value=raw]').hidden = rawStatus === null;
+    $('fst').value = rawStatus !== null ? 'raw' : st.word;
+    $('fdate').value = st.date || ''; $('fnote').value = st.note || '';
+    $('fnotes').value = noteOf(r.id);
+    preview();
+  }
+  const panelStatus = () => $('fst').value === 'raw' ? { raw: rawStatus } : { word: $('fst').value, date: $('fdate').value, note: $('fnote').value.trim() };
+  const preview = () => { $('fprev').textContent = 'Status cell: ' + Core.buildStatus(panelStatus()); };
+  function openPanel(id) { S.sel = id; fillPanel(); renderBoard(); }
+  function closePanel() { S.sel = null; $('panel').hidden = true; renderBoard(); }
+  function stageStatus() { preview(); stage(S.sel, { status: Core.buildStatus(panelStatus()) }); }
+
+  // ---- events
+  $('ftask').oninput = e => stage(S.sel, { task: e.target.value });
+  $('fown').onchange = e => stage(S.sel, { owner: e.target.value });
+  $('fdeps').oninput = e => stage(S.sel, { deps: e.target.value });
+  $('fdone').oninput = e => stage(S.sel, { done: e.target.value });
+  $('fst').onchange = () => {
+    if (/^(done|blocked|parked)$/.test($('fst').value) && !$('fdate').value) $('fdate').value = Core.today();
+    stageStatus();
+  };
+  $('fdate').onchange = stageStatus; $('fnote').oninput = stageStatus;
+  $('fnotes').oninput = e => { S.notesEdit[S.sel] = e.target.value; renderBoard(); renderState(); };
+  $('pclose').onclick = closePanel; $('psave').onclick = save; $('state').onclick = () => dirty() && save();
+  $('reload').onclick = async () => { if (dirty() && !confirm('Discard unsaved edits and reload?')) return; if (S.demo || S.dir) await load(); else boot(); };
+  $('undo').onclick = undo;
+  $('q').oninput = e => { S.f.q = e.target.value.trim().toLowerCase(); renderBoard(); };
+  for (const [id, key] of [['fowner', 'owner'], ['fstatus', 'status']]) $(id).onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.f[key] = b.dataset.v; $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); renderBoard();
+  };
+  addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); return; }
+    if (e.key === 'Escape' && !$('panel').hidden && !$('dnew').open) closePanel();
+    if (e.code === 'Space' && !/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(e.target.tagName) && !$('dnew').open) { e.preventDefault(); document.body.classList.add('panning'); }
+  });
+  const unpan = () => document.body.classList.remove('panning', 'dragging');
+  addEventListener('keyup', e => e.code === 'Space' && unpan()); addEventListener('blur', unpan);
+  let drag = null;
+  $('board').addEventListener('mousedown', e => {
+    if (!document.body.classList.contains('panning')) return;
+    drag = { x: e.clientX, y: e.clientY, sl: $('board').scrollLeft, col: e.target.closest('.col') }; drag.st = drag.col ? drag.col.scrollTop : 0;
+    document.body.classList.add('dragging');
+  });
+  addEventListener('mousemove', e => { if (!drag) return; $('board').scrollLeft = drag.sl - (e.clientX - drag.x); if (drag.col) drag.col.scrollTop = drag.st - (e.clientY - drag.y); });
+  addEventListener('mouseup', () => { drag = null; document.body.classList.remove('dragging'); });
+  addEventListener('beforeunload', e => { if (dirty() && !S.demo) e.preventDefault(); });
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden || S.demo || !S.dir || dirty()) return;
+    try { const t = await readText(S.roadPath); if (t !== null && t !== S.base) { await load(); say('ROADMAP.md changed on disk; reloaded.'); } } catch { /* leave as is */ }
+  });
+
+  // New task
+  $('new').onclick = async () => {
+    const phases = S.doc.phases.filter(p => p.table);
+    if (!phases.length) return say('No task table in the roadmap yet.', true);
+    const sel = $('nphase'); sel.replaceChildren(...phases.map(p => el('option', { value: p.heading, textContent: p.heading })));
+    const sp = S.sel && Core.findRow(S.doc, S.sel); if (sp) sel.value = sp.phase.heading;
+    let arch = null; if (!S.demo && S.archivePath) { try { arch = await readText(S.prefix + S.archivePath); } catch { /* optional */ } }
+    const fill = () => { const id = Core.nextId(S.doc, sel.value, arch); $('nid').value = id || ''; $('nidhint').textContent = id ? 'Next free number in this phase.' : 'No numbered rows here yet: type the ID.'; };
+    sel.onchange = fill; fill(); $('ntask').value = '';
+    $('dnew').showModal();
+  };
+  $('dnew').querySelector('form').addEventListener('submit', e => {
+    if (e.submitter && e.submitter.value !== 'ok') return;
+    const id = $('nid').value.trim();
+    if (Core.findRow(S.doc, id)) return say(id + ' already exists.', true);
+    S.pending.push({ op: 'add', phase: $('nphase').value, id, f: { task: $('ntask').value, owner: '🤖', status: 'todo', deps: '—', done: '' } });
+    S.sel = id; render(); $('ftask').focus();
+  });
+  $('dnew').addEventListener('click', e => { if (e.target === $('dnew')) $('dnew').close('cancel'); });
+
+  // ---- folder
+  async function connect(h) {
+    S.dir = h; S.handle = h;
+    if (!(await load())) { $('start').hidden = false; $('board').hidden = true; }
+  }
+  async function choose() {
+    try { const h = await showDirectoryPicker({ mode: 'readwrite' }); await idbPut(h); await connect(h); } catch (e) { if (e.name !== 'AbortError') say(e.message, true); }
+  }
+  $('choose').onclick = $('folder').onclick = choose;
+  $('reconnect').onclick = async () => {
+    try { if (await S.handle.requestPermission({ mode: 'readwrite' }) === 'granted') await connect(S.handle); } catch (e) { say(e.message, true); }
+  };
+  async function boot() {
+    if (S.demo) { await load(); $('folder').hidden = true; return; }
+    $('start').hidden = false;
+    if (!window.showDirectoryPicker) { $('starttext').textContent = 'This browser cannot open folders. Use Chrome or Edge.'; $('choose').hidden = true; return; }
+    const h = await idbGet();
+    if (!h) return;
+    S.handle = h;
+    if (await h.queryPermission({ mode: 'readwrite' }) === 'granted') return connect(h);
+    $('reconnect').hidden = false; $('reconnect').textContent = 'Reconnect ' + h.name;
+  }
+  boot().catch(e => say(e.message, true));
+})();
+</script>
+</body>
+</html>
